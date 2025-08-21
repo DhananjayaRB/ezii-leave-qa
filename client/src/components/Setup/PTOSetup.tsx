@@ -117,7 +117,7 @@ export default function PTOSetup({ onNext, onPrevious, isLast, isLoading, showNa
         {/* Variants Section */}
         <div className="mb-8">
           <h3 className="text-lg font-medium text-gray-800 mb-4">Variants</h3>
-
+          
           {/* Display real BTO variants */}
           {Array.isArray(ptoVariants) && ptoVariants.map((variant: any) => (
             <Card key={variant.id} className="mb-4">

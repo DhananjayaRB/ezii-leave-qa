@@ -26,7 +26,7 @@ interface PermissionStructure {
   compensatoryOff: { view: boolean; modify: boolean };
   bto: { view: boolean; modify: boolean };
   employeeReports: { view: boolean; modify: boolean };
-
+  
   // Admin Screens
   adminOverview: { view: boolean; modify: boolean };
   approvals: { view: boolean; modify: boolean };
@@ -35,12 +35,12 @@ interface PermissionStructure {
   roles: { view: boolean; modify: boolean };
   importLeaveData: { view: boolean; modify: boolean };
   adminReports: { view: boolean; modify: boolean };
-
+  
   // Admin Configuration Screens
   adminLeaveTypes: { view: boolean; modify: boolean };
   adminCompOff: { view: boolean; modify: boolean };
   adminBTO: { view: boolean; modify: boolean };
-
+  
   // Allow On Behalf Actions
   allowOnBehalf: { bto: boolean; leave: boolean; compOff: boolean };
 }
@@ -56,7 +56,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
   const [searchTerm, setSearchTerm] = useState("");
   const [showRoleForm, setShowRoleForm] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
-
+  
   const [formData, setFormData] = useState<FormData>({
     name: "",
     description: "",
@@ -68,7 +68,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       compensatoryOff: { view: false, modify: false },
       bto: { view: false, modify: false },
       employeeReports: { view: false, modify: false },
-
+      
       // Admin Screens
       adminOverview: { view: false, modify: false },
       approvals: { view: false, modify: false },
@@ -77,12 +77,12 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       roles: { view: false, modify: false },
       importLeaveData: { view: false, modify: false },
       adminReports: { view: false, modify: false },
-
+      
       // Admin Configuration Screens
       adminLeaveTypes: { view: false, modify: false },
       adminCompOff: { view: false, modify: false },
       adminBTO: { view: false, modify: false },
-
+      
       // Allow On Behalf Actions
       allowOnBehalf: { bto: false, leave: false, compOff: false },
     },
@@ -184,7 +184,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
         compensatoryOff: { view: false, modify: false },
         bto: { view: false, modify: false },
         employeeReports: { view: false, modify: false },
-
+        
         // Admin Screens
         adminOverview: { view: false, modify: false },
         approvals: { view: false, modify: false },
@@ -193,12 +193,12 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
         roles: { view: false, modify: false },
         importLeaveData: { view: false, modify: false },
         adminReports: { view: false, modify: false },
-
+        
         // Admin Configuration Screens
         adminLeaveTypes: { view: false, modify: false },
         adminCompOff: { view: false, modify: false },
         adminBTO: { view: false, modify: false },
-
+        
         // Allow On Behalf Actions
         allowOnBehalf: { bto: false, leave: false, compOff: false },
       },
@@ -208,7 +208,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
 
   const handleEditRole = (role: Role) => {
     setEditingRole(role);
-
+    
     // Parse permissions from database
     let permissions: PermissionStructure;
     try {
@@ -219,7 +219,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       console.error('Error parsing role permissions:', error);
       permissions = formData.permissions; // fallback to default
     }
-
+    
     setFormData({
       name: role.name,
       description: role.description || "",
@@ -291,7 +291,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       'adminOverview', 'approvals', 'employees', 'workflows', 'roles', 'importLeaveData', 'adminReports',
       'adminLeaveTypes', 'adminCompOff', 'adminBTO'
     ];
-
+    
     setFormData(prev => {
       const updatedPermissions = { ...prev.permissions };
       permissionKeys.forEach(key => {
@@ -309,7 +309,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       'adminOverview', 'approvals', 'employees', 'workflows', 'roles', 'importLeaveData', 'adminReports',
       'adminLeaveTypes', 'adminCompOff', 'adminBTO'
     ];
-
+    
     setFormData(prev => {
       const updatedPermissions = { ...prev.permissions };
       permissionKeys.forEach(key => {
@@ -327,7 +327,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       'adminOverview', 'approvals', 'employees', 'workflows', 'roles', 'importLeaveData', 'adminReports',
       'adminLeaveTypes', 'adminCompOff', 'adminBTO'
     ];
-
+    
     setFormData(prev => {
       const updatedPermissions = { ...prev.permissions };
       permissionKeys.forEach(key => {
@@ -345,7 +345,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
       'adminOverview', 'approvals', 'employees', 'workflows', 'roles', 'importLeaveData', 'adminReports',
       'adminLeaveTypes', 'adminCompOff', 'adminBTO'
     ];
-
+    
     setFormData(prev => {
       const updatedPermissions = { ...prev.permissions };
       permissionKeys.forEach(key => {
@@ -612,7 +612,7 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Roles</h2>
-
+        
         {/* Search and Create */}
         <div className="flex items-center justify-between mb-6">
           <div className="relative flex-1 max-w-md">
@@ -689,11 +689,11 @@ export default function RolesSetup({ onNext, onPrevious, isLast, isLoading, show
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
-
+                  
                   {role.description && (
                     <p className="text-sm text-gray-600 mb-3">{role.description}</p>
                   )}
-
+                  
                   <div className="text-xs text-gray-500">
                     Created: {(role as any).createdAt ? new Date((role as any).createdAt).toLocaleDateString() : "Unknown"}
                   </div>

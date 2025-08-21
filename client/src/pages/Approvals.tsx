@@ -27,7 +27,7 @@ export default function Approvals() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const { toast } = useToast();
-
+  
   // Get reporting manager data for filtering
   const reportingManagerData = useReportingManagerData();
 
@@ -74,29 +74,29 @@ export default function Approvals() {
   // Helper function to get employee name
   const getEmployeeName = (userId: string) => {
     if (!userId) return 'Unknown Employee';
-
+    
     // First try external API data - check both string and number matching
     const externalEmployee = (externalEmployees as any[]).find(emp => 
       emp.user_id === userId || emp.user_id === parseInt(userId) || emp.user_id?.toString() === userId
     );
-
+    
     if (externalEmployee && externalEmployee.user_name) {
       return externalEmployee.user_name;
     }
-
+    
     if (externalEmployee && (externalEmployee.first_name || externalEmployee.last_name)) {
       const name = `${externalEmployee.first_name || ''} ${externalEmployee.last_name || ''}`.trim();
       if (name) return name;
     }
-
+    
     // Fallback to database users
     const dbEmployee = (users as any[]).find(user => user.id === userId);
     if (dbEmployee && dbEmployee.firstName) {
       return `${dbEmployee.firstName} ${dbEmployee.lastName || ''}`.trim();
     }
-
+    
     // Only use authentic database users - no hardcoded mappings
-
+    
     // If external API and database lookup both fail, show employee ID only
     // This ensures we never display fake employee names
     return `Employee ID: ${userId}`;
@@ -107,33 +107,33 @@ export default function Approvals() {
     if (!blackoutPeriods || blackoutPeriods.length === 0) {
       return { hasConflict: false };
     }
-
+    
     const requestStart = new Date(startDate);
     const requestEnd = new Date(endDate);
-
+    
     for (const period of blackoutPeriods as any[]) {
       // Check if user is assigned to this blackout period (check both string and number formats)
       const isUserAssigned = period.assignedEmployees && (
         period.assignedEmployees.includes(userId.toString()) || 
         period.assignedEmployees.includes(parseInt(userId))
       );
-
+      
       if (!isUserAssigned) {
         continue; // User not assigned to this blackout period
       }
-
+      
       // Check if leave dates overlap with blackout period
       const blackoutStart = new Date(period.startDate);
       const blackoutEnd = new Date(period.endDate);
-
+      
       // Check for date overlap: (startA <= endB) && (startB <= endA)
       const hasOverlap = (requestStart <= blackoutEnd) && (blackoutStart <= requestEnd);
-
+      
       if (hasOverlap) {
         return { hasConflict: true, periodName: period.title };
       }
     }
-
+    
     return { hasConflict: false };
   };
 
@@ -141,18 +141,18 @@ export default function Approvals() {
   let filteredLeaveRequests = leaveRequests as any[];
   let filteredPtoRequests = ptoRequests as any[];
   let filteredCompOffRequests = compOffRequests as any[];
-
+  
   console.log('🔍 [Approvals] Pre-filter comp-off requests:', filteredCompOffRequests.length);
   console.log('🔍 [Approvals] Reporting manager data:', {
     isReportingManager: reportingManagerData.isReportingManager,
     reporteesCount: reportingManagerData.reportees.length,
     currentView: currentView
   });
-
+  
   if (reportingManagerData.isReportingManager && reportingManagerData.reportees.length > 0) {
     const reporteeIds = reportingManagerData.reportees.map(r => r.user_id.toString());
     console.log('🔍 [Approvals] Filtering for reportees:', reporteeIds);
-
+    
     filteredLeaveRequests = filteredLeaveRequests.filter(req => 
       reporteeIds.includes(req.userId?.toString())
     );
@@ -162,7 +162,7 @@ export default function Approvals() {
     filteredCompOffRequests = filteredCompOffRequests.filter(req => 
       reporteeIds.includes(req.userId?.toString())
     );
-
+    
     console.log('🔍 [Approvals] Post-filter comp-off requests:', filteredCompOffRequests.length);
   } else {
     console.log('🔍 [Approvals] No filtering applied - showing all requests');
@@ -204,16 +204,16 @@ export default function Approvals() {
       case "Rejected": requests = rejectedRequests; break;
       default: requests = currentTabData;
     }
-
+    
     // Apply search filter
     if (searchQuery.trim()) {
       requests = requests.filter((request: any) => {
         const employeeName = getEmployeeName(request.userId).toLowerCase();
         const query = searchQuery.toLowerCase();
-
+        
         // Search by employee name
         if (employeeName.includes(query)) return true;
-
+        
         // Search by leave type
         let leaveType = '';
         if (activeRequestTab === "BTO") {
@@ -224,29 +224,29 @@ export default function Approvals() {
           const leaveTypeObj = (leaveTypes as any[]).find(type => type.id === request.leaveTypeId);
           leaveType = leaveTypeObj?.name || 'Unknown Leave Type';
         }
-
+        
         if (leaveType.toLowerCase().includes(query)) return true;
-
+        
         // Search by status
         const status = request.status === 'withdrawal_pending' ? 'withdrawal pending' : request.status;
         if (status.toLowerCase().includes(query)) return true;
-
+        
         return false;
       });
     }
-
+    
     // Sort requests to prioritize withdrawal_pending (most recent actions) at the top
     const sorted = requests.sort((a: any, b: any) => {
       // Prioritize withdrawal_pending requests first
       if (a.status === 'withdrawal_pending' && b.status !== 'withdrawal_pending') return -1;
       if (b.status === 'withdrawal_pending' && a.status !== 'withdrawal_pending') return 1;
-
+      
       // Then sort by creation date (most recent first)
       const dateA = new Date(a.createdAt || a.startDate || a.requestDate).getTime();
       const dateB = new Date(b.createdAt || b.startDate || b.requestDate).getTime();
       return dateB - dateA;
     });
-
+    
     return sorted;
   };
 
@@ -489,7 +489,7 @@ export default function Approvals() {
                           hasDocuments: request.documents && request.documents.length > 0
                         };
                       }
-
+                      
                       return (
                         <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
                           <td className="py-3 px-4 font-medium text-gray-900">
@@ -530,7 +530,7 @@ export default function Approvals() {
                                   request.startDate,
                                   request.endDate
                                 );
-
+                                
                                 if (blackoutCheck.hasConflict) {
                                   return (
                                     <div className="text-sm">
@@ -604,7 +604,7 @@ export default function Approvals() {
                     })}
                   </tbody>
                 </table>
-
+                
                 {/* Pagination Controls */}
                 <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
                   <div className="flex items-center text-sm text-gray-500">
@@ -623,7 +623,7 @@ export default function Approvals() {
                       <ChevronLeft className="w-4 h-4 mr-1" />
                       Previous
                     </Button>
-
+                    
                     <div className="flex items-center space-x-1">
                       {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                         let pageNum;
@@ -636,7 +636,7 @@ export default function Approvals() {
                         } else {
                           pageNum = currentPage - 2 + i;
                         }
-
+                        
                         return (
                           <Button
                             key={pageNum}
@@ -650,7 +650,7 @@ export default function Approvals() {
                         );
                       })}
                     </div>
-
+                    
                     <Button
                       variant="outline"
                       size="sm"

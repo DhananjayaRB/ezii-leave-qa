@@ -68,8 +68,8 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  if (process.env.NODE_ENV !== "production") {
-    console.log("Skipping static file serving in development mode");
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('Skipping static file serving in development mode');
     return;
   }
 

@@ -15,52 +15,29 @@ interface PTOVariantFormProps {
   onClose: () => void;
 }
 
-export default function PTOVariantForm({
-  variant,
-  onClose,
-}: PTOVariantFormProps) {
+export default function PTOVariantForm({ variant, onClose }: PTOVariantFormProps) {
   const { toast } = useToast();
   const isEditing = !!variant;
   const [showEmployeeAssignment, setShowEmployeeAssignment] = useState(false);
   const [assignedEmployees, setAssignedEmployees] = useState<any[]>([]);
-
+  
   // Form state
   const [halfDay, setHalfDay] = useState(variant?.halfDay || false);
   const [quarterDay, setQuarterDay] = useState(variant?.quarterDay || false);
   const [hours, setHours] = useState(variant?.hours || false);
-  const [workflowRequired, setWorkflowRequired] = useState(
-    variant?.workflowRequired || false,
-  );
-  const [noticePeriodAllowed, setNoticePeriodAllowed] = useState(
-    variant?.noticePeriodAllowed || true,
-  );
-  const [documentsRequired, setDocumentsRequired] = useState(
-    variant?.documentsRequired || false,
-  );
+  const [workflowRequired, setWorkflowRequired] = useState(variant?.workflowRequired || false);
+  const [noticePeriodAllowed, setNoticePeriodAllowed] = useState(variant?.noticePeriodAllowed || true);
+  const [documentsRequired, setDocumentsRequired] = useState(variant?.documentsRequired || false);
   const [lossOfPay, setLossOfPay] = useState(variant?.lossOfPay || true);
-  const [deductHalfDay, setDeductHalfDay] = useState(
-    variant?.deductHalfDay || false,
-  );
-  const [deductQuarterDay, setDeductQuarterDay] = useState(
-    variant?.deductQuarterDay || false,
-  );
+  const [deductHalfDay, setDeductHalfDay] = useState(variant?.deductHalfDay || false);
+  const [deductQuarterDay, setDeductQuarterDay] = useState(variant?.deductQuarterDay || false);
   const [deductHours, setDeductHours] = useState(variant?.deductHours || false);
-  const [applicableAfterType, setApplicableAfterType] = useState(
-    variant?.applicableAfterType || "date_of_joining",
-  );
-  const [withdrawalBeforeApproval, setWithdrawalBeforeApproval] = useState(
-    variant?.withdrawalBeforeApproval !== false,
-  );
-  const [withdrawalAfterApproval, setWithdrawalAfterApproval] = useState(
-    variant?.withdrawalAfterApproval || false,
-  );
-  const [withdrawalNotAllowed, setWithdrawalNotAllowed] = useState(
-    variant?.withdrawalNotAllowed || false,
-  );
+  const [applicableAfterType, setApplicableAfterType] = useState(variant?.applicableAfterType || "date_of_joining");
+  const [withdrawalBeforeApproval, setWithdrawalBeforeApproval] = useState(variant?.withdrawalBeforeApproval !== false);
+  const [withdrawalAfterApproval, setWithdrawalAfterApproval] = useState(variant?.withdrawalAfterApproval || false);
+  const [withdrawalNotAllowed, setWithdrawalNotAllowed] = useState(variant?.withdrawalNotAllowed || false);
   const [selectedLeaveTypes, setSelectedLeaveTypes] = useState<string[]>([]);
-  const [documentDescription, setDocumentDescription] = useState(
-    variant?.documentDescription || "",
-  );
+  const [documentDescription, setDocumentDescription] = useState(variant?.documentDescription || "");
 
   // Withdrawal settings logic - mutual exclusivity
   const handleWithdrawalBeforeApprovalChange = (checked: boolean) => {
@@ -111,13 +88,9 @@ export default function PTOVariantForm({
         const employeeData = await fetchEmployeeData();
         const transformedEmployees = employeeData.map(transformEmployeeData);
         setAllEmployees(transformedEmployees);
-        console.log(
-          "PTO Edit - External API loaded",
-          transformedEmployees.length,
-          "employees",
-        );
+        console.log("PTO Edit - External API loaded", transformedEmployees.length, "employees");
       } catch (error) {
-        console.error("Error loading employees:", error);
+        console.error('Error loading employees:', error);
       }
     };
 
@@ -128,31 +101,21 @@ export default function PTOVariantForm({
   useEffect(() => {
     if (allEmployees.length > 0 && assignedEmployees.length > 0) {
       // Check if current assigned employees are just fallback data
-      const isUsingFallbackData = assignedEmployees.every(
-        (emp) =>
-          emp.user_name?.startsWith("Employee ") &&
-          emp.firstName === "Employee",
+      const isUsingFallbackData = assignedEmployees.every(emp => 
+        emp.user_name?.startsWith('Employee ') && emp.firstName === 'Employee'
       );
-
+      
       if (isUsingFallbackData) {
-        console.log(
-          "PTO Edit - Enhancing fallback data with external API data",
-        );
-        const assignedUserIds = assignedEmployees.map(
-          (emp) => emp.user_id || emp.id,
-        );
-        const enhancedEmployees = allEmployees.filter((emp) => {
+        console.log("PTO Edit - Enhancing fallback data with external API data");
+        const assignedUserIds = assignedEmployees.map(emp => emp.user_id || emp.id);
+        const enhancedEmployees = allEmployees.filter(emp => {
           const userIdMatch = assignedUserIds.includes(emp.user_id);
           const idMatch = assignedUserIds.includes(emp.id);
           return userIdMatch || idMatch;
         });
-
+        
         if (enhancedEmployees.length > 0) {
-          console.log(
-            "PTO Edit - Enhanced",
-            enhancedEmployees.length,
-            "employees with API data",
-          );
+          console.log("PTO Edit - Enhanced", enhancedEmployees.length, "employees with API data");
           setAssignedEmployees(enhancedEmployees);
         }
       }
@@ -165,30 +128,18 @@ export default function PTOVariantForm({
       return; // Still loading assignments
     }
 
-    console.log(
-      "PTO Edit - Processing assignments:",
-      existingAssignments.length,
-      "assignments",
-    );
-    console.log(
-      "PTO Edit - All employees loaded:",
-      allEmployees.length,
-      "employees",
-    );
-
+    console.log("PTO Edit - Processing assignments:", existingAssignments.length, "assignments");
+    console.log("PTO Edit - All employees loaded:", allEmployees.length, "employees");
+    
     if (existingAssignments.length === 0) {
       // No assignments exist
-      console.log(
-        "PTO Edit - No assignments found, clearing assigned employees",
-      );
+      console.log("PTO Edit - No assignments found, clearing assigned employees");
       setAssignedEmployees([]);
       return;
     }
 
     // Create fallback employees immediately to preserve assignments
-    const assignedUserIds = existingAssignments.map(
-      (assignment: any) => assignment.userId,
-    );
+    const assignedUserIds = existingAssignments.map((assignment: any) => assignment.userId);
     const fallbackEmployees = existingAssignments.map((assignment: any) => ({
       user_id: assignment.userId,
       id: assignment.userId,
@@ -210,45 +161,32 @@ export default function PTOVariantForm({
       leaveId: assignment.userId,
       isDifferentlyAbled: false,
       lastWorkingDay: null,
-      employee_number: assignment.userId,
+      employee_number: assignment.userId
     }));
 
     if (allEmployees.length > 0) {
       // Try to match with external API employee data if available
-      const assignedEmployeeData = allEmployees.filter((emp) => {
+      const assignedEmployeeData = allEmployees.filter(emp => {
         const userIdMatch = assignedUserIds.includes(emp.user_id);
         const idMatch = assignedUserIds.includes(emp.id);
         return userIdMatch || idMatch;
       });
-
+      
       if (assignedEmployeeData.length > 0) {
-        console.log(
-          "PTO Edit - Matched",
-          assignedEmployeeData.length,
-          "employees from external API",
-        );
+        console.log("PTO Edit - Matched", assignedEmployeeData.length, "employees from external API");
         setAssignedEmployees(assignedEmployeeData);
       } else {
-        console.log(
-          "PTO Edit - No matches found in external API, using fallback employees",
-        );
+        console.log("PTO Edit - No matches found in external API, using fallback employees");
         setAssignedEmployees(fallbackEmployees);
       }
     } else {
       // External API not loaded yet, use fallback to preserve assignments
-      console.log(
-        "PTO Edit - External API not loaded, using fallback employees to preserve assignments",
-      );
+      console.log("PTO Edit - External API not loaded, using fallback employees to preserve assignments");
       setAssignedEmployees(fallbackEmployees);
     }
   }, [existingAssignments, variant?.id]);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({
     defaultValues: {
       leaveVariantName: variant?.leaveVariantName || variant?.name || "",
       description: variant?.description || "",
@@ -259,8 +197,8 @@ export default function PTOVariantForm({
       maxInstances: variant?.maxInstances || 0,
       maxInstancesPeriod: variant?.maxInstancesPeriod || "Month",
       documentDescription: variant?.documentDescription || "",
-      grantingPeriod: variant?.grantingPeriod || "Yearly",
-    },
+      grantingPeriod: variant?.grantingPeriod || "Yearly"
+    }
   });
 
   // Add useEffect to update state when variant changes
@@ -283,7 +221,7 @@ export default function PTOVariantForm({
       setWithdrawalNotAllowed(variant.withdrawalNotAllowed || false);
       setSelectedLeaveTypes(variant.deductibleLeaveTypes || []);
       setDocumentDescription(variant.documentDescription || "");
-
+      
       // Reset form values
       reset({
         leaveVariantName: variant.name || "",
@@ -295,13 +233,10 @@ export default function PTOVariantForm({
         maxInstances: variant.maxInstances || 0,
         maxInstancesPeriod: variant.maxInstancesPeriod || "Month",
         documentDescription: variant.documentDescription || "",
-        grantingPeriod: variant.grantingPeriod || "Yearly",
+        grantingPeriod: variant.grantingPeriod || "Yearly"
       });
-
-      console.log(
-        "PTO Form - Loaded applicableAfterType:",
-        variant.applicableAfterType || "date_of_joining",
-      );
+      
+      console.log("PTO Form - Loaded applicableAfterType:", variant.applicableAfterType || "date_of_joining");
     }
   }, [variant, reset]);
 
@@ -335,44 +270,40 @@ export default function PTOVariantForm({
         deductibleLeaveTypes: selectedLeaveTypes,
         documentDescription,
       };
-
+      
       console.log("PTO Variant Form - Submission payload:", payload);
-
-      const result = isEditing
+      
+      const result = isEditing 
         ? await apiRequest("PATCH", `/api/pto-variants/${variant.id}`, payload)
         : await apiRequest("POST", "/api/pto-variants", payload);
-
+        
       // If creating a new variant and there are assigned employees, create assignments
       if (!isEditing && assignedEmployees.length > 0 && (result as any)?.id) {
-        const assignments = assignedEmployees.map((emp) => ({
+        const assignments = assignedEmployees.map(emp => ({
           userId: emp.user_id || emp.id, // Support both user_id and id fields
           leaveVariantId: (result as any).id,
-          assignmentType: "pto_variant",
+          assignmentType: "pto_variant"
         }));
         console.log("PTO new variant assignment payload:", assignments);
-
-        await apiRequest("POST", "/api/employee-assignments/bulk", {
-          assignments,
-        });
+        
+        await apiRequest("POST", "/api/employee-assignments/bulk", { assignments });
       }
-
+      
       return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/pto-variants"] });
-      queryClient.invalidateQueries({
-        queryKey: ["/api/employee-assignments"],
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/employee-assignments"] });
       toast({
         title: "Success",
-        description: `PTO variant ${isEditing ? "updated" : "created"} successfully.`,
+        description: `PTO variant ${isEditing ? 'updated' : 'created'} successfully.`,
       });
       onClose();
     },
     onError: () => {
       toast({
         title: "Error",
-        description: `Failed to ${isEditing ? "update" : "create"} PTO variant.`,
+        description: `Failed to ${isEditing ? 'update' : 'create'} PTO variant.`,
         variant: "destructive",
       });
     },
@@ -391,7 +322,7 @@ export default function PTOVariantForm({
 
     if (!data.description?.trim()) {
       toast({
-        title: "Validation Error",
+        title: "Validation Error", 
         description: "Description is required.",
         variant: "destructive",
       });
@@ -402,8 +333,7 @@ export default function PTOVariantForm({
     if (documentsRequired && !documentDescription.trim()) {
       toast({
         title: "Validation Error",
-        description:
-          "Document description is required when supporting documents are required.",
+        description: "Document description is required when supporting documents are required.",
         variant: "destructive",
       });
       return;
@@ -422,7 +352,7 @@ export default function PTOVariantForm({
       lossOfPay,
       deductHalfDay,
       deductQuarterDay,
-      deductHours,
+      deductHours
     };
 
     createMutation.mutate(submissionData);
@@ -433,19 +363,14 @@ export default function PTOVariantForm({
       {/* Loading Overlay */}
       {createMutation.isPending && (
         <div className="absolute inset-0 bg-white bg-opacity-90 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
-          <DancingLoader
-            size="lg"
-            text={
-              isEditing ? "Updating PTO variant..." : "Creating PTO variant..."
-            }
-          />
+          <DancingLoader size="lg" text={isEditing ? "Updating PTO variant..." : "Creating PTO variant..."} />
         </div>
       )}
-
+      
       <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900">
-            {isEditing ? "Edit PTO Variant" : "New PTO Variant"}
+            {isEditing ? 'Edit PTO Variant' : 'New PTO Variant'}
           </h2>
           <Button
             variant="outline"
@@ -462,45 +387,37 @@ export default function PTOVariantForm({
           {/* PTO units allowed */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                PTO units allowed
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">PTO units allowed</h3>
               <div className="flex items-center space-x-8">
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="halfDay"
-                    className="rounded"
+                  <input 
+                    type="checkbox" 
+                    id="halfDay" 
+                    className="rounded" 
                     checked={halfDay}
                     onChange={(e) => setHalfDay(e.target.checked)}
                   />
-                  <label htmlFor="halfDay" className="text-sm font-medium">
-                    Half Day
-                  </label>
+                  <label htmlFor="halfDay" className="text-sm font-medium">Half Day</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="quarterDay"
-                    className="rounded"
+                  <input 
+                    type="checkbox" 
+                    id="quarterDay" 
+                    className="rounded" 
                     checked={quarterDay}
                     onChange={(e) => setQuarterDay(e.target.checked)}
                   />
-                  <label htmlFor="quarterDay" className="text-sm font-medium">
-                    Quarter Day
-                  </label>
+                  <label htmlFor="quarterDay" className="text-sm font-medium">Quarter Day</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="hours"
-                    className="rounded"
+                  <input 
+                    type="checkbox" 
+                    id="hours" 
+                    className="rounded" 
                     checked={hours}
                     onChange={(e) => setHours(e.target.checked)}
                   />
-                  <label htmlFor="hours" className="text-sm font-medium">
-                    Hours
-                  </label>
+                  <label htmlFor="hours" className="text-sm font-medium">Hours</label>
                 </div>
               </div>
             </CardContent>
@@ -512,24 +429,17 @@ export default function PTOVariantForm({
               <label className="text-sm font-medium text-gray-700 block mb-2">
                 PTO Variant Name <span className="text-red-500">*</span>
               </label>
-              <p className="text-xs text-gray-500 mb-2">
-                Create tailored PTO policies for specific groups of employees
-                using variants
-              </p>
+              <p className="text-xs text-gray-500 mb-2">Create tailored PTO policies for specific groups of employees using variants</p>
               <input
-                {...register("leaveVariantName", {
-                  required: "PTO variant name is required",
-                })}
+                {...register("leaveVariantName", { required: "PTO variant name is required" })}
                 type="text"
                 placeholder="eg. For Factory Employees"
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.leaveVariantName ? "border-red-500" : "border-gray-300"
+                  errors.leaveVariantName ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
               {errors.leaveVariantName && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.leaveVariantName.message as string}
-                </p>
+                <p className="text-xs text-red-500 mt-1">{errors.leaveVariantName.message as string}</p>
               )}
             </div>
 
@@ -538,18 +448,14 @@ export default function PTOVariantForm({
                 Description <span className="text-red-500">*</span>
               </label>
               <textarea
-                {...register("description", {
-                  required: "Description is required",
-                })}
+                {...register("description", { required: "Description is required" })}
                 placeholder="eg. Need time off for personal errands? Use PTO."
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] ${
-                  errors.description ? "border-red-500" : "border-gray-300"
+                  errors.description ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
               {errors.description && (
-                <p className="text-xs text-red-500 mt-1">
-                  {errors.description.message as string}
-                </p>
+                <p className="text-xs text-red-500 mt-1">{errors.description.message as string}</p>
               )}
             </div>
           </div>
@@ -557,16 +463,12 @@ export default function PTOVariantForm({
           {/* Eligibility Criteria */}
           <Card>
             <CardContent className="p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">
-                Eligibility Criteria
-              </h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">Eligibility Criteria</h3>
               <div className="space-y-6">
                 {/* Applicable after */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-gray-900">
-                    Applicable after
-                  </h4>
-
+                  <h4 className="text-sm font-medium text-gray-900">Applicable after</h4>
+                  
                   {/* Option 1: Probation Period Ends */}
                   <div className="flex items-center space-x-3">
                     <input
@@ -629,19 +531,13 @@ export default function PTOVariantForm({
 
                 {/* Workflow requirement */}
                 <div className="space-y-2">
-                  <span className="text-sm text-gray-700">
-                    Does this require a review workflow for approval?
-                  </span>
+                  <span className="text-sm text-gray-700">Does this require a review workflow for approval?</span>
                   <div className="flex items-center space-x-2">
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => setWorkflowRequired(true)}
-                      className={
-                        workflowRequired
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
+                      className={workflowRequired ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                     >
                       Workflow
                     </Button>
@@ -649,27 +545,17 @@ export default function PTOVariantForm({
                       type="button"
                       size="sm"
                       onClick={() => setWorkflowRequired(false)}
-                      className={
-                        !workflowRequired
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
+                      className={!workflowRequired ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                     >
                       No Workflow
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    If leave you select 'No workflow' then PTO will be
-                    auto-approved and leave balance will be deducted
-                    immediately.
-                  </p>
+                  <p className="text-xs text-gray-500">If leave you select 'No workflow' then PTO will be auto-approved and leave balance will be deducted immediately.</p>
                 </div>
 
                 {/* Withdrawal of application allowed */}
                 <div className="space-y-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    Withdrawal of application allowed
-                  </span>
+                  <span className="text-sm font-medium text-gray-700">Withdrawal of application allowed</span>
                   {workflowRequired ? (
                     // When workflow is required, show detailed options
                     <div className="flex items-center space-x-6">
@@ -677,44 +563,28 @@ export default function PTOVariantForm({
                         <input
                           type="checkbox"
                           checked={withdrawalBeforeApproval}
-                          onChange={(e) =>
-                            handleWithdrawalBeforeApprovalChange(
-                              e.target.checked,
-                            )
-                          }
+                          onChange={(e) => handleWithdrawalBeforeApprovalChange(e.target.checked)}
                           className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                         />
-                        <span className="text-sm text-gray-700">
-                          Before approval
-                        </span>
+                        <span className="text-sm text-gray-700">Before approval</span>
                       </label>
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
                           checked={withdrawalAfterApproval}
-                          onChange={(e) =>
-                            handleWithdrawalAfterApprovalChange(
-                              e.target.checked,
-                            )
-                          }
+                          onChange={(e) => handleWithdrawalAfterApprovalChange(e.target.checked)}
                           className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                         />
-                        <span className="text-sm text-gray-700">
-                          After approval
-                        </span>
+                        <span className="text-sm text-gray-700">After approval</span>
                       </label>
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
                           checked={withdrawalNotAllowed}
-                          onChange={(e) =>
-                            handleWithdrawalNotAllowedChange(e.target.checked)
-                          }
+                          onChange={(e) => handleWithdrawalNotAllowedChange(e.target.checked)}
                           className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                         />
-                        <span className="text-sm text-gray-700">
-                          Not allowed
-                        </span>
+                        <span className="text-sm text-gray-700">Not allowed</span>
                       </label>
                     </div>
                   ) : (
@@ -754,9 +624,7 @@ export default function PTOVariantForm({
                           }}
                           className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
                         />
-                        <span className="text-sm text-gray-700">
-                          Not allowed
-                        </span>
+                        <span className="text-sm text-gray-700">Not allowed</span>
                       </label>
                     </div>
                   )}
@@ -764,9 +632,7 @@ export default function PTOVariantForm({
 
                 {/* Approval advance notice */}
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">
-                    Approval request should be made
-                  </span>
+                  <span className="text-sm text-gray-700">Approval request should be made</span>
                   <input
                     {...register("approvalDays", { valueAsNumber: true })}
                     type="number"
@@ -779,9 +645,7 @@ export default function PTOVariantForm({
 
                 {/* Minimum hours */}
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">
-                    Minimum hours required
-                  </span>
+                  <span className="text-sm text-gray-700">Minimum hours required</span>
                   <input
                     {...register("minimumHours", { valueAsNumber: true })}
                     type="number"
@@ -793,9 +657,7 @@ export default function PTOVariantForm({
 
                 {/* Max hours */}
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-700">
-                    Max hours allowed
-                  </span>
+                  <span className="text-sm text-gray-700">Max hours allowed</span>
                   <input
                     {...register("maxHours", { valueAsNumber: true })}
                     type="number"
@@ -817,7 +679,7 @@ export default function PTOVariantForm({
                     />
                     <span className="text-sm text-gray-500">(days)</span>
                     <span className="text-sm text-gray-700">in a</span>
-                    <select
+                    <select 
                       {...register("maxInstancesPeriod")}
                       className="px-3 py-1 border border-gray-300 rounded"
                     >
@@ -826,26 +688,18 @@ export default function PTOVariantForm({
                       <option value="Year">Year</option>
                     </select>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    If the value is 0, it is understood that there is no limit.
-                  </p>
+                  <p className="text-xs text-gray-500">If the value is 0, it is understood that there is no limit.</p>
                 </div>
 
                 {/* Notice period */}
                 <div className="space-y-2">
-                  <span className="text-sm text-gray-700">
-                    During notice period, PTO is
-                  </span>
+                  <span className="text-sm text-gray-700">During notice period, PTO is</span>
                   <div className="flex items-center space-x-2">
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => setNoticePeriodAllowed(true)}
-                      className={
-                        noticePeriodAllowed
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
+                      className={noticePeriodAllowed ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                     >
                       Allowed
                     </Button>
@@ -853,11 +707,7 @@ export default function PTOVariantForm({
                       type="button"
                       size="sm"
                       onClick={() => setNoticePeriodAllowed(false)}
-                      className={
-                        !noticePeriodAllowed
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
+                      className={!noticePeriodAllowed ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                     >
                       Not Allowed
                     </Button>
@@ -866,19 +716,13 @@ export default function PTOVariantForm({
 
                 {/* Supporting documents */}
                 <div className="space-y-2">
-                  <span className="text-sm text-gray-700">
-                    Supporting documents are
-                  </span>
+                  <span className="text-sm text-gray-700">Supporting documents are</span>
                   <div className="flex items-center space-x-2">
                     <Button
                       type="button"
                       size="sm"
                       onClick={() => setDocumentsRequired(true)}
-                      className={
-                        documentsRequired
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
+                      className={documentsRequired ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                     >
                       Required
                     </Button>
@@ -886,11 +730,7 @@ export default function PTOVariantForm({
                       type="button"
                       size="sm"
                       onClick={() => setDocumentsRequired(false)}
-                      className={
-                        !documentsRequired
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                      }
+                      className={!documentsRequired ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                     >
                       Not Required
                     </Button>
@@ -899,26 +739,20 @@ export default function PTOVariantForm({
                     <>
                       <div className="space-y-1">
                         <label className="text-sm text-gray-700">
-                          Document Description{" "}
-                          <span className="text-red-500">*</span>
+                          Document Description <span className="text-red-500">*</span>
                         </label>
                         <textarea
                           value={documentDescription}
-                          onChange={(e) =>
-                            setDocumentDescription(e.target.value)
-                          }
+                          onChange={(e) => setDocumentDescription(e.target.value)}
                           placeholder="Enter the details of the documents to be added. This message will be displayed to your employees while uploading documents."
                           className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] ${
-                            documentsRequired && !documentDescription.trim()
-                              ? "border-red-500 focus:ring-red-500"
-                              : "border-gray-300"
+                            documentsRequired && !documentDescription.trim() 
+                              ? 'border-red-500 focus:ring-red-500' 
+                              : 'border-gray-300'
                           }`}
                         />
                         {documentsRequired && !documentDescription.trim() && (
-                          <p className="text-xs text-red-500">
-                            Description is required when supporting documents
-                            are required.
-                          </p>
+                          <p className="text-xs text-red-500">Description is required when supporting documents are required.</p>
                         )}
                       </div>
                     </>
@@ -928,19 +762,13 @@ export default function PTOVariantForm({
                 {/* If max instances crossed */}
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <span className="text-sm text-gray-700">
-                      If Max. PTO instances/ hours are crossed
-                    </span>
+                    <span className="text-sm text-gray-700">If Max. PTO instances/ hours are crossed</span>
                     <div className="flex items-center space-x-2">
                       <Button
                         type="button"
                         size="sm"
                         onClick={() => setLossOfPay(true)}
-                        className={
-                          lossOfPay
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }
+                        className={lossOfPay ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                       >
                         Loss of Pay
                       </Button>
@@ -948,11 +776,7 @@ export default function PTOVariantForm({
                         type="button"
                         size="sm"
                         onClick={() => setLossOfPay(false)}
-                        className={
-                          !lossOfPay
-                            ? "bg-green-600 hover:bg-green-700 text-white"
-                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                        }
+                        className={!lossOfPay ? "bg-green-600 hover:bg-green-700 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}
                       >
                         Deduct from Leave Balance
                       </Button>
@@ -961,47 +785,37 @@ export default function PTOVariantForm({
 
                   {lossOfPay && (
                     <div className="space-y-2">
-                      <span className="text-sm text-gray-700">
-                        Deduct Pay for
-                      </span>
+                      <span className="text-sm text-gray-700">Deduct Pay for</span>
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="deductHalfDay"
-                            className="rounded"
+                          <input 
+                            type="checkbox" 
+                            id="deductHalfDay" 
+                            className="rounded" 
                             checked={deductHalfDay}
                             onChange={(e) => setDeductHalfDay(e.target.checked)}
                           />
-                          <label htmlFor="deductHalfDay" className="text-sm">
-                            Half Day
-                          </label>
+                          <label htmlFor="deductHalfDay" className="text-sm">Half Day</label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="deductQuarterDay"
-                            className="rounded"
+                          <input 
+                            type="checkbox" 
+                            id="deductQuarterDay" 
+                            className="rounded" 
                             checked={deductQuarterDay}
-                            onChange={(e) =>
-                              setDeductQuarterDay(e.target.checked)
-                            }
+                            onChange={(e) => setDeductQuarterDay(e.target.checked)}
                           />
-                          <label htmlFor="deductQuarterDay" className="text-sm">
-                            Quarter Day
-                          </label>
+                          <label htmlFor="deductQuarterDay" className="text-sm">Quarter Day</label>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            id="deductHours"
-                            className="rounded"
+                          <input 
+                            type="checkbox" 
+                            id="deductHours" 
+                            className="rounded" 
                             checked={deductHours}
                             onChange={(e) => setDeductHours(e.target.checked)}
                           />
-                          <label htmlFor="deductHours" className="text-sm">
-                            Hours
-                          </label>
+                          <label htmlFor="deductHours" className="text-sm">Hours</label>
                         </div>
                       </div>
                     </div>
@@ -1009,57 +823,35 @@ export default function PTOVariantForm({
 
                   {!lossOfPay && (
                     <div className="space-y-2">
-                      <span className="text-sm text-gray-700">
-                        Select leave types to deduct from:
-                      </span>
+                      <span className="text-sm text-gray-700">Select leave types to deduct from:</span>
                       <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded p-3">
-                        {leaveTypes
-                          .filter((type: any) => type.enabled !== false)
-                          .map((leaveType: any) => (
-                            <label
-                              key={leaveType.id}
-                              className="flex items-center space-x-2"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selectedLeaveTypes.includes(
-                                  leaveType.id.toString(),
-                                )}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    setSelectedLeaveTypes([
-                                      ...selectedLeaveTypes,
-                                      leaveType.id.toString(),
-                                    ]);
-                                  } else {
-                                    setSelectedLeaveTypes(
-                                      selectedLeaveTypes.filter(
-                                        (id) => id !== leaveType.id.toString(),
-                                      ),
-                                    );
-                                  }
-                                }}
-                                className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                              />
-                              <span className="text-sm text-gray-700">
-                                {leaveType.name}
-                              </span>
-                            </label>
-                          ))}
+                        {leaveTypes.filter((type: any) => type.enabled !== false).map((leaveType: any) => (
+                          <label key={leaveType.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedLeaveTypes.includes(leaveType.id.toString())}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedLeaveTypes([...selectedLeaveTypes, leaveType.id.toString()]);
+                                } else {
+                                  setSelectedLeaveTypes(selectedLeaveTypes.filter(id => id !== leaveType.id.toString()));
+                                }
+                              }}
+                              className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                            />
+                            <span className="text-sm text-gray-700">{leaveType.name}</span>
+                          </label>
+                        ))}
                       </div>
                       {selectedLeaveTypes.length === 0 && (
-                        <p className="text-xs text-red-500">
-                          Please select at least one leave type for deduction.
-                        </p>
+                        <p className="text-xs text-red-500">Please select at least one leave type for deduction.</p>
                       )}
                     </div>
                   )}
 
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-700">
-                      PTO will be granted
-                    </span>
-                    <select
+                    <span className="text-sm text-gray-700">PTO will be granted</span>
+                    <select 
                       {...register("grantingPeriod")}
                       className="px-3 py-1 border border-gray-300 rounded"
                     >
@@ -1089,43 +881,25 @@ export default function PTOVariantForm({
                 className="text-blue-600 border-blue-200 hover:bg-blue-50"
               >
                 <Users className="w-4 h-4 mr-2" />
-                {assignedEmployees.length > 0
-                  ? "Edit Assignment"
-                  : "Assign Employees"}
+                {assignedEmployees.length > 0 ? 'Edit Assignment' : 'Assign Employees'}
               </Button>
             </CardHeader>
             {assignedEmployees.length > 0 && (
               <CardContent>
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-700">
-                    {assignedEmployees.length} employee
-                    {assignedEmployees.length > 1 ? "s" : ""} assigned
+                    {assignedEmployees.length} employee{assignedEmployees.length > 1 ? 's' : ''} assigned
                   </p>
                   <div className="flex flex-wrap items-center gap-3">
                     {assignedEmployees.slice(0, 3).map((employee, index) => (
-                      <div
-                        key={employee.user_id}
-                        className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-1"
-                      >
+                      <div key={employee.user_id} className="flex items-center space-x-2 bg-gray-50 rounded-lg px-3 py-1">
                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-blue-600">
-                            {(
-                              employee.user_name ||
-                              employee.name ||
-                              `${employee.firstName || ""} ${employee.lastName || ""}`.trim() ||
-                              employee.employeeNumber ||
-                              employee.user_id
-                            )
-                              .charAt(0)
-                              .toUpperCase()}
+                            {(employee.user_name || employee.name || `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.employeeNumber || employee.user_id).charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <span className="text-xs text-gray-700">
-                          {employee.user_name ||
-                            employee.name ||
-                            `${employee.firstName || ""} ${employee.lastName || ""}`.trim() ||
-                            employee.employeeNumber ||
-                            employee.user_id}
+                          {employee.user_name || employee.name || `${employee.firstName || ''} ${employee.lastName || ''}`.trim() || employee.employeeNumber || employee.user_id}
                         </span>
                       </div>
                     ))}
@@ -1155,11 +929,7 @@ export default function PTOVariantForm({
               disabled={createMutation.isPending}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {createMutation.isPending
-                ? "Processing..."
-                : isEditing
-                  ? "Update Variant"
-                  : "Create Variant"}
+              {createMutation.isPending ? "Processing..." : (isEditing ? "Update Variant" : "Create Variant")}
             </Button>
           </div>
         </div>
@@ -1181,34 +951,32 @@ export default function PTOVariantForm({
                 setAssignedEmployees(selectedEmployees);
                 toast({
                   title: "Success",
-                  description: `${selectedEmployees.length} employee${selectedEmployees.length > 1 ? "s" : ""} will be assigned when variant is created.`,
+                  description: `${selectedEmployees.length} employee${selectedEmployees.length > 1 ? 's' : ''} will be assigned when variant is created.`,
                 });
                 return;
               }
 
               // For existing variants, save assignments immediately
-              const assignments = selectedEmployees.map((emp) => ({
+              const assignments = selectedEmployees.map(emp => ({
                 userId: emp.user_id || emp.id, // Support both user_id and id fields
                 leaveVariantId: variant.id,
-                assignmentType: "pto_variant",
+                assignmentType: "pto_variant"
               }));
               console.log("PTO Assignment payload:", assignments);
-
-              await apiRequest("POST", "/api/employee-assignments/bulk", {
-                assignments,
-              });
+              
+              await apiRequest("POST", "/api/employee-assignments/bulk", { assignments });
 
               // Update local state with selected employees
               setAssignedEmployees(selectedEmployees);
-
+              
               // Invalidate the query to refresh data
-              queryClient.invalidateQueries({
-                queryKey: [`/api/employee-assignments/${variant.id}`],
+              queryClient.invalidateQueries({ 
+                queryKey: [`/api/employee-assignments/${variant.id}`] 
               });
-
+              
               toast({
                 title: "Success",
-                description: `${selectedEmployees.length} employee${selectedEmployees.length > 1 ? "s" : ""} assigned successfully.`,
+                description: `${selectedEmployees.length} employee${selectedEmployees.length > 1 ? 's' : ''} assigned successfully.`,
               });
             } catch (error) {
               toast({

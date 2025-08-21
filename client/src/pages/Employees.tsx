@@ -4,25 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Search,
-  Filter,
-  ChevronRight,
-  ChevronLeft,
-  X,
-  MapPin,
-  User,
-  Edit,
-  AlertTriangle,
-} from "lucide-react";
+import { Search, Filter, ChevronRight, ChevronLeft, X, MapPin, User, Edit, AlertTriangle } from "lucide-react";
 import { useLocation } from "wouter";
 import Layout from "@/components/Layout";
 
@@ -37,11 +21,7 @@ export default function Employees() {
   const [, setLocation] = useLocation();
 
   // Use internal API endpoint that calls external worker-master-leave API
-  const {
-    data: employeeData = [],
-    isLoading: isLoadingEmployees,
-    error: employeeError,
-  } = useQuery({
+  const { data: employeeData = [], isLoading: isLoadingEmployees, error: employeeError } = useQuery({
     queryKey: ["/api/users"],
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -51,11 +31,8 @@ export default function Employees() {
   useEffect(() => {
     if (employeeData.length > 0) {
       try {
-        console.log(
-          "[Employees] Processing employee data...",
-          employeeData.length,
-        );
-
+        console.log('[Employees] Processing employee data...', employeeData.length);
+        
         // Transform external API data to match component structure
         const formattedEmployees = employeeData.map((emp: any) => {
           return {
@@ -76,24 +53,21 @@ export default function Employees() {
             phoneNumber: emp.phoneNumber || "N/A",
             reportingManager: emp.reportingManager || "N/A",
             reportingManagerId: emp.reportingManager || null,
-            assignmentStatus: emp.assignmentStatus || "Unassigned",
+            assignmentStatus: emp.assignmentStatus || "Unassigned"
           };
         });
 
-        console.log(
-          "[Employees] Successfully formatted employees:",
-          formattedEmployees.length,
-        );
+        console.log('[Employees] Successfully formatted employees:', formattedEmployees.length);
         setAllEmployees(formattedEmployees);
         setEmployees(formattedEmployees);
         setError(null);
       } catch (error) {
         console.error("[Employees] Error processing employees:", error);
-        setError("Failed to process employee data. Please try again.");
+        setError('Failed to process employee data. Please try again.');
       }
     } else if (employeeError) {
       console.error("[Employees] Error loading employees:", employeeError);
-      setError("Failed to load employee data. Please try again.");
+      setError('Failed to load employee data. Please try again.');
       setAllEmployees([]);
       setEmployees([]);
     }
@@ -102,24 +76,21 @@ export default function Employees() {
   // Handle search and filtering
   useEffect(() => {
     let filtered = allEmployees;
-
+    
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(
-        (emp) =>
-          emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          emp.employeeNumber?.toString().includes(searchTerm),
+      filtered = filtered.filter(emp => 
+        emp.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.employeeNumber?.toString().includes(searchTerm)
       );
     }
-
+    
     // Apply assignment status filter
     if (assignmentFilter !== "all") {
-      filtered = filtered.filter(
-        (emp) => emp.assignmentStatus === assignmentFilter,
-      );
+      filtered = filtered.filter(emp => emp.assignmentStatus === assignmentFilter);
     }
-
+    
     setEmployees(filtered);
   }, [searchTerm, assignmentFilter, allEmployees]);
 
@@ -131,13 +102,10 @@ export default function Employees() {
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Employees</h1>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-lg border p-4 animate-pulse"
-              >
+              <div key={i} className="bg-white rounded-lg border p-4 animate-pulse">
                 <div className="flex items-center space-x-3 mb-3">
                   <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
                   <div className="space-y-2">
@@ -191,10 +159,7 @@ export default function Employees() {
             />
           </div>
           <div className="w-48">
-            <Select
-              value={assignmentFilter}
-              onValueChange={setAssignmentFilter}
-            >
+            <Select value={assignmentFilter} onValueChange={setAssignmentFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
@@ -209,18 +174,13 @@ export default function Employees() {
 
         {/* Unassigned Employees Alert */}
         {(() => {
-          const unassignedCount = allEmployees.filter(
-            (emp) => emp.assignmentStatus === "Unassigned",
-          ).length;
+          const unassignedCount = allEmployees.filter(emp => emp.assignmentStatus === 'Unassigned').length;
           if (unassignedCount > 0) {
             return (
               <Alert className="mb-6 border-orange-200 bg-orange-50">
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  <strong>{unassignedCount}</strong>{" "}
-                  {unassignedCount === 1 ? "employee has" : "employees have"} no
-                  leave type assignments. Consider assigning leave types to
-                  ensure proper leave management.
+                  <strong>{unassignedCount}</strong> {unassignedCount === 1 ? 'employee has' : 'employees have'} no leave type assignments. Consider assigning leave types to ensure proper leave management.
                 </AlertDescription>
               </Alert>
             );
@@ -234,24 +194,12 @@ export default function Employees() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  <th className="text-left p-4 font-medium text-gray-900">
-                    Employee ID
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-900">
-                    Name
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-900">
-                    Email
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-900">
-                    Designation
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-900">
-                    Reporting Manager
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-900">
-                    Leave Type Assignment
-                  </th>
+                  <th className="text-left p-4 font-medium text-gray-900">Employee ID</th>
+                  <th className="text-left p-4 font-medium text-gray-900">Name</th>
+                  <th className="text-left p-4 font-medium text-gray-900">Email</th>
+                  <th className="text-left p-4 font-medium text-gray-900">Designation</th>
+                  <th className="text-left p-4 font-medium text-gray-900">Reporting Manager</th>
+                  <th className="text-left p-4 font-medium text-gray-900">Leave Type Assignment</th>
                 </tr>
               </thead>
               <tbody>
@@ -264,46 +212,27 @@ export default function Employees() {
                           <User className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-900">
-                            {employee.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {employee.gender}
-                          </div>
+                          <div className="font-medium text-gray-900">{employee.name}</div>
+                          <div className="text-sm text-gray-500">{employee.gender}</div>
                         </div>
                       </div>
                     </td>
+                    <td className="p-4 text-sm text-gray-900">{employee.email}</td>
+                    <td className="p-4 text-sm text-gray-900">{employee.designation}</td>
                     <td className="p-4 text-sm text-gray-900">
-                      {employee.email}
-                    </td>
-                    <td className="p-4 text-sm text-gray-900">
-                      {employee.designation}
-                    </td>
-                    <td className="p-4 text-sm text-gray-900">
-                      {employee.reportingManager &&
-                      employee.reportingManager !== "N/A" ? (
+                      {employee.reportingManager && employee.reportingManager !== "N/A" ? (
                         <div className="flex items-center space-x-2">
                           <User className="w-4 h-4 text-gray-400" />
                           <span>{employee.reportingManager}</span>
                         </div>
                       ) : (
-                        <span className="text-gray-400 italic">
-                          No manager assigned
-                        </span>
+                        <span className="text-gray-400 italic">No manager assigned</span>
                       )}
                     </td>
                     <td className="p-4">
-                      <Badge
-                        variant={
-                          employee.assignmentStatus === "Assigned"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={
-                          employee.assignmentStatus === "Assigned"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
-                        }
+                      <Badge 
+                        variant={employee.assignmentStatus === 'Assigned' ? 'default' : 'secondary'}
+                        className={employee.assignmentStatus === 'Assigned' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
                       >
                         {employee.assignmentStatus}
                       </Badge>

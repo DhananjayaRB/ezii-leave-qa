@@ -111,7 +111,7 @@ export default function LeaveTypeVariants() {
 
   const leaveTypeName = params?.leaveTypeName || "";
   const decodedLeaveTypeName = decodeURIComponent(leaveTypeName);
-
+  
   // Check if we're in setup mode
   const isSetupMode = location.includes('?setup=true');
 
@@ -239,7 +239,7 @@ export default function LeaveTypeVariants() {
       {/* Variants Section */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Variants</h2>
-
+        
         {typeVariants.length === 0 ? (
           <Card className="p-8 text-center">
             <div className="text-gray-500 mb-4">
@@ -297,7 +297,7 @@ export default function LeaveTypeVariants() {
                 </CardContent>
               </Card>
             ))}
-
+            
             {/* Create Another Variant Button */}
             <Button
               variant="outline"

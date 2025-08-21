@@ -75,7 +75,7 @@ export default function Layout({ children }: LayoutProps) {
     localStorage.removeItem('role_name');
     localStorage.removeItem('org_id');
     localStorage.removeItem('leave_year');
-
+    
     // Redirect to the appropriate login service based on plan status
     await redirectToLogin();
   };
@@ -85,7 +85,7 @@ export default function Layout({ children }: LayoutProps) {
     // External modules that require plan status check and redirect
     const planStatusModules = ['core', 'payroll'];
     const loginStringModules = ['attendance', 'expense'];
-
+    
     if (planStatusModules.includes(moduleId)) {
       // Check if plan status is available
       if (planStatus && !planStatusLoading) {
@@ -103,7 +103,7 @@ export default function Layout({ children }: LayoutProps) {
       setActiveModule(moduleId);
     }
   };
-
+  
   // Check JWT token expiration
   useJWTTokenCheck();
 
@@ -125,11 +125,11 @@ export default function Layout({ children }: LayoutProps) {
   // Get current user's display data - check localStorage override first
   const localStorageUserId = localStorage.getItem('user_id');
   const userData = user as any;
-
+  
   // If localStorage has a different user_id, try to find that user in external employees
   let displayName = 'User';
   let initials = 'U';
-
+  
   if (localStorageUserId && localStorageUserId !== userData?.id) {
     // Use external employee data for localStorage user_id, with fallback mapping
     const targetEmployee = (externalEmployees as any[]).find(emp => emp.user_id === localStorageUserId);
@@ -144,7 +144,7 @@ export default function Layout({ children }: LayoutProps) {
         '7246': { name: 'Anjali Kumari', initials: 'AK' },
         '12080': { name: 'Rahul Sharma', initials: 'RS' }
       };
-
+      
       const knownUser = knownUsers[localStorageUserId];
       if (knownUser) {
         displayName = knownUser.name;
@@ -166,7 +166,7 @@ export default function Layout({ children }: LayoutProps) {
     displayName = userData?.firstName && userData?.lastName ? 
       `${userData.firstName} ${userData.lastName}` : 
       (userData?.email ? userData.email.split('@')[0] : 'User');
-
+    
     initials = userData?.firstName && userData?.lastName ? 
       `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase() : 
       (userData?.firstName ? userData.firstName[0].toUpperCase() : 'U');
@@ -174,15 +174,15 @@ export default function Layout({ children }: LayoutProps) {
 
   // Get user role from localStorage (permanent role)
   const userRole = localStorage.getItem('role_name') || localStorage.getItem('role');
+  
 
-
-
+  
   // Get current view mode (separate from actual role)
   const [currentView, setCurrentView] = useState(() => {
     const savedView = localStorage.getItem('currentView');
     return savedView || 'admin';
   });
-
+  
   // Sync currentView with localStorage on mount only
   useEffect(() => {
     const savedView = localStorage.getItem('currentView');
@@ -207,7 +207,7 @@ export default function Layout({ children }: LayoutProps) {
     { name: "Roles", href: "/roles", icon: UserCheck, permission: "roles", type: "admin" },
 
     { name: "Import Leave Data", href: "/import-leave-data", icon: Upload, permission: "importLeaveData", type: "admin" },
-
+    
     // Employee Navigation
     { name: "My Dashboard", href: "/employee-overview", icon: BarChart3, permission: "employeeOverview", type: "employee" },
     { name: "Leave Applications", href: "/applications", icon: FileCheck, permission: "leaveApplications", type: "employee" },
@@ -243,15 +243,15 @@ export default function Layout({ children }: LayoutProps) {
 
   // Check if current user can toggle roles based on having permissions in both admin and employee views
   const storedUserId = localStorage.getItem('user_id');
-
+  
   const hasAdminPermissions = !permissionsLoading && permissions && allNavigationItems
     .filter(item => item.type === 'admin')
     .some(item => canViewScreen(item.permission as any));
-
+  
   const hasEmployeePermissions = !permissionsLoading && permissions && allNavigationItems
     .filter(item => item.type === 'employee')
     .some(item => canViewScreen(item.permission as any));
-
+  
   // Always show toggle for admin role users (they can view both admin and employee sections)
   const canToggleRole = userRole === 'admin' || (hasAdminPermissions && hasEmployeePermissions);
 
@@ -479,9 +479,9 @@ export default function Layout({ children }: LayoutProps) {
                 </Link>
               );
             })}
+            
 
-
-
+            
             {userRole === 'admin' && configurations.length > 0 && (
               <div className="space-y-1">
                 <div 
@@ -581,7 +581,7 @@ export default function Layout({ children }: LayoutProps) {
             )}
           </div>
         </nav>
-
+        
         {/* View Toggle at Bottom */}
         {userRole === 'admin' && (
           <div className="mt-auto p-3 md:p-4">
@@ -629,7 +629,7 @@ export default function Layout({ children }: LayoutProps) {
               <button className="hidden md:block p-2 text-gray-400 hover:text-gray-600 transition-colors">
                 <Bell className="w-4 md:w-5 h-4 md:h-5" />
               </button>
-
+              
               {/* View Indicator and Switch - Hidden on mobile */}
               {userRole === 'admin' && (
                 <div className="hidden md:flex items-center space-x-2">

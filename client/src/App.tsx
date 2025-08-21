@@ -47,27 +47,27 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
-
+  
   // Check JWT token expiration
   useJWTTokenCheck();
 
   // Initialize user_id in localStorage on app startup
   useEffect(() => {
     initializeUserId();
-
+    
     // Set default leave_year in localStorage if not already set
     if (!localStorage.getItem('leave_year')) {
       localStorage.setItem('leave_year', 'January-2025-December 2025');
       console.log('[App] Set default leave_year: January-2025-December 2025');
     }
-
+    
     // Check for JWT token in URL and process it immediately
     const currentPath = window.location.pathname;
     if (currentPath.startsWith('/id/')) {
       const token = currentPath.substring(4); // Remove '/id/' prefix
       console.log('=== PROCESSING JWT TOKEN ===');
       console.log('Found token in URL:', token);
-
+      
       try {
         // Decode JWT manually
         const parts = token.split('.');
@@ -76,22 +76,22 @@ function Router() {
           const paddedPayload = payload + '='.repeat((4 - payload.length % 4) % 4);
           const decodedPayload = atob(paddedPayload);
           const parsedPayload = JSON.parse(decodedPayload);
-
+          
           console.log('Decoded JWT payload:', parsedPayload);
-
+          
           // Store JWT data in localStorage - preserve existing user_id if manually set
           const existingUserId = localStorage.getItem('user_id');
           const userIdToSet = existingUserId || parsedPayload.user_id;
-
+          
           localStorage.setItem('org_id', parsedPayload.org_id);
           localStorage.setItem('user_id', userIdToSet);
           localStorage.setItem('role_id', parsedPayload.role_id);
           localStorage.setItem('role_name', parsedPayload.role_name);
           localStorage.setItem('user_type_id', parsedPayload.user_type_id);
           localStorage.setItem('jwt_token', token);
-
+          
           console.log('JWT processing - preserved user_id:', userIdToSet, 'from JWT:', parsedPayload.user_id);
-
+          
           console.log('JWT data stored, redirecting to home...');
           window.location.href = '/';
           return;
@@ -100,9 +100,9 @@ function Router() {
         console.error('Failed to process JWT token:', error);
       }
     }
-
+    
     // JWT token processing is now working correctly
-
+    
     // Debug localStorage contents  
     console.log('=== LOCALSTORAGE DEBUG ===');
     console.log('Keys in localStorage:', Object.keys(localStorage));
@@ -125,13 +125,13 @@ function Router() {
         <Route path="/test">
           {() => <div>Test route works!</div>}
         </Route>
-
+        
         {/* JWT Token Handler - Must be before authentication check */}
         <Route path="/id/:token" component={TokenHandler} />
-
+        
         {/* Immediate JWT processing if URL contains /id/ */}
         {window.location.pathname.startsWith('/id/') ? null : null}
-
+        
         {!isAuthenticated ? (
           <Route path="/" component={Landing} />
         ) : (

@@ -76,95 +76,40 @@
 
 /* Dancing Loader Animations */
 @keyframes dance {
-
-  0%,
-  100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-
-  25% {
-    transform: translateY(-5px) rotate(-2deg);
-  }
-
-  50% {
-    transform: translateY(-8px) rotate(0deg);
-  }
-
-  75% {
-    transform: translateY(-5px) rotate(2deg);
-  }
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(-2deg); }
+  50% { transform: translateY(-8px) rotate(0deg); }
+  75% { transform: translateY(-5px) rotate(2deg); }
 }
 
 @keyframes wave-left {
-
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-
-  50% {
-    transform: rotate(-45deg);
-  }
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-45deg); }
 }
 
 @keyframes wave-right {
-
-  0%,
-  100% {
-    transform: rotate(0deg);
-  }
-
-  50% {
-    transform: rotate(45deg);
-  }
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(45deg); }
 }
 
 @keyframes kick-left {
-
-  0%,
-  100% {
-    transform: rotate(0deg) translateX(0px);
-  }
-
-  50% {
-    transform: rotate(-15deg) translateX(-3px);
-  }
+  0%, 100% { transform: rotate(0deg) translateX(0px); }
+  50% { transform: rotate(-15deg) translateX(-3px); }
 }
 
 @keyframes kick-right {
-
-  0%,
-  100% {
-    transform: rotate(0deg) translateX(0px);
-  }
-
-  50% {
-    transform: rotate(15deg) translateX(3px);
-  }
+  0%, 100% { transform: rotate(0deg) translateX(0px); }
+  50% { transform: rotate(15deg) translateX(3px); }
 }
 
 @keyframes step-left {
-
-  0%,
-  100% {
-    transform: translateX(0px) translateY(0px);
-  }
-
-  50% {
-    transform: translateX(-4px) translateY(-2px);
-  }
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  50% { transform: translateX(-4px) translateY(-2px); }
 }
 
 @keyframes step-right {
-
-  0%,
-  100% {
-    transform: translateX(0px) translateY(0px);
-  }
-
-  50% {
-    transform: translateX(4px) translateY(-2px);
-  }
+  0%, 100% { transform: translateX(0px) translateY(0px); }
+  50% { transform: translateX(4px) translateY(-2px); }
 }
 
 .animate-dance {

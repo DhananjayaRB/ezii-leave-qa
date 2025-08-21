@@ -113,7 +113,7 @@ export default function Landing() {
               </div>
               <span className="font-semibold text-lg text-gray-900">eziileave</span>
             </div>
-
+            
             <div className="text-center">
               <h1 className="text-2xl font-bold text-gray-900 mb-2">Welcome to eziileave</h1>
               <p className="text-gray-600">

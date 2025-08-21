@@ -41,7 +41,7 @@ export default function EmployeeOverview() {
 
   // Get current user ID from localStorage - MUST match current session
   const currentUserId = localStorage.getItem('user_id') || '241';
-
+  
   // Debug current user ID
   console.log('🔍 [EmployeeOverview] Current user ID from localStorage:', currentUserId);
 
@@ -89,7 +89,7 @@ export default function EmployeeOverview() {
   const variantsArray = Array.isArray(leaveVariants) ? leaveVariants : [];
   const balancesArray = Array.isArray(leaveBalances) ? leaveBalances : [];
   const requestsArray = Array.isArray(leaveRequests) ? leaveRequests : [];
-
+  
   // CRITICAL FIX: The old cards work because they use balancesArray directly!
   // So instead of complex assignment filtering, use the leave balances directly 
   // which already contain the variants the user can access
@@ -99,7 +99,7 @@ export default function EmployeeOverview() {
     leaveVariantName: balance.leaveVariantName,
     leaveTypeId: balance.leaveTypeId || null
   }));
-
+  
   console.log('🔍 [EmployeeOverview] SIMPLIFIED APPROACH - Using balances directly:', {
     balancesCount: balancesArray.length,
     availableVariantsFromBalances: availableLeaveVariants.length,
@@ -110,35 +110,35 @@ export default function EmployeeOverview() {
   // EXACT SAME CALCULATION AS LEAVE APPLICATIONS - Total Leaves (Eligibility)
   const totalEligibility = (() => {
     let totalEligibilitySum = 0;
-
+    
     availableLeaveVariants.forEach((variant: any) => {
       const balance = balancesArray.find((b: any) => b.leaveVariantId === variant.id);
       const transactions = Array.isArray(leaveTransactions) ? leaveTransactions.filter((t: any) => t.leaveVariantId === variant.id) : [];
-
+      
       // Calculate opening balance from imported Excel data transactions
       const openingBalanceTransactions = transactions.filter((t: any) => 
         t.transactionType === 'opening_balance' || t.transactionType === 'system'
       );
       const openingBalance = openingBalanceTransactions.reduce((sum: number, t: any) => sum + parseFloat(t.amount || 0), 0);
-
+      
       // Get eligibility (entitlement)
       const eligibility = balance ? parseFloat(balance.entitlement || 0) : 0;
-
+      
       // Total eligibility = eligibility + opening balance
       const totalEligibility = eligibility + openingBalance;
-
+      
       totalEligibilitySum += totalEligibility;
     });
-
+    
     return totalEligibilitySum;
   })();
 
   // EXACT SAME CALCULATION AS LEAVE APPLICATIONS - Total Availed
   const totalAvailed = (() => {
     const allUserTransactions = (leaveTransactions as any[]).filter((t: any) => t.userId === currentUserId);
-
+    
     let totalAvailedfromTxn = 0;
-
+    
     availableLeaveVariants.forEach((variant: any) => {
       const transactionsForVariant = allUserTransactions.filter((t: any) => {
         if (t.leaveVariantId === variant.id) return true;
@@ -147,29 +147,29 @@ export default function EmployeeOverview() {
         if (transactionVariant?.leaveTypeId === variant.leaveTypeId) return true;
         return false;
       });
-
+      
       const leaveTakenTransactions = transactionsForVariant.filter((t: any) => 
         ['leave_taken', 'imported', 'manual_deduction'].includes(t.transactionType) && parseFloat(t.amount || 0) < 0
       );
-
+      
       const variantAvailed = leaveTakenTransactions.reduce((sum: number, t: any) => sum + Math.abs(parseFloat(t.amount || 0)), 0);
       totalAvailedfromTxn += variantAvailed;
     });
-
+    
     return totalAvailedfromTxn;
   })();
 
   // EXACT SAME CALCULATION AS LEAVE APPLICATIONS - Balance
   const totalBalance = (() => {
     let totalClosingBalance = 0;
-
+    
     availableLeaveVariants.forEach((variant: any) => {
       const balance = balancesArray.find((b: any) => b.leaveVariantId === variant.id);
       if (balance) {
         totalClosingBalance += parseFloat(balance.currentBalance || 0);
       }
     });
-
+    
     return totalClosingBalance;
   })();
 
@@ -201,13 +201,16 @@ export default function EmployeeOverview() {
   const generateMonthlyData = () => {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return months.map((month, index) => {
+      // Filter for approved leaves only - exclude rejected and pending leaves from usage trends
       const monthRequests = leaveRequests.filter((req: any) => {
         const requestDate = new Date(req.startDate);
-        return requestDate.getMonth() === index && requestDate.getFullYear() === parseInt(selectedYear);
+        return requestDate.getMonth() === index && 
+               requestDate.getFullYear() === parseInt(selectedYear) &&
+               req.status === 'approved'; // Only include approved leaves in usage trends
       });
 
       const monthlyData: any = { month };
-
+      
       // Count by leave type
       leaveBalances.forEach((balance: LeaveBalance) => {
         const typeRequests = monthRequests.filter((req: any) => req.leaveTypeName === balance.leaveTypeName);
@@ -272,7 +275,7 @@ export default function EmployeeOverview() {
     const daysInMonth = getDaysInMonth(currentMonth, currentYear);
     const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
     const dayHeaders = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-
+    
     return (
       <div className="space-y-4">
         {/* Month navigation */}
@@ -294,13 +297,13 @@ export default function EmployeeOverview() {
               {day}
             </div>
           ))}
-
+          
           {/* Calendar days */}
           {Array.from({ length: 42 }, (_, i) => {
             const dayNumber = i - firstDay + 1;
             const isCurrentMonth = dayNumber > 0 && dayNumber <= daysInMonth;
             const hasLeave = isCurrentMonth ? hasLeaveOnDate(dayNumber) : false;
-
+            
             if (!isCurrentMonth) {
               return <div key={i} className="h-8"></div>;
             }

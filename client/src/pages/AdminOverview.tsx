@@ -25,21 +25,21 @@ export default function AdminOverview() {
   const [selectedPeriod, setSelectedPeriod] = useState("Yearly");
   const [selectedCalendarDay, setSelectedCalendarDay] = useState<any>(null);
   const [showLeavePopup, setShowLeavePopup] = useState(false);
-
+  
   const currentUserId = localStorage.getItem('user_id') || '1';
-
+  
   // Get work pattern data for leave calculations (keep this for other functionality)  
   const { workPattern, holidays: workPatternHolidays, isHoliday: workPatternIsHoliday, isWorkingDay, getHolidayDetails: workPatternGetHolidayDetails } = useWorkPattern();
+  
 
-
-
+  
   // Fetch holidays from external API (same as Holidays page)
   const { data: allHolidaysData } = useQuery({
     queryKey: ['/external/holidays'],
     queryFn: async () => {
       const jwtToken = localStorage.getItem('jwt_token');
       console.log('🔑 [AdminOverview External Holidays] JWT token found:', !!jwtToken);
-
+      
       if (!jwtToken) {
         throw new Error('JWT token not found in localStorage');
       }
@@ -77,7 +77,7 @@ export default function AdminOverview() {
   const allHolidays = allHolidaysData && allHolidaysData.length > 0 
     ? allHolidaysData 
     : (dbHolidays || []);
-
+    
   // Filter holidays based on user's work pattern selectedHolidays (same as Holidays page)
   const filteredHolidays = workPattern && workPattern.selectedHolidays 
     ? allHolidays.filter((holiday: any) => workPattern.selectedHolidays.includes(holiday.id))
@@ -127,7 +127,7 @@ export default function AdminOverview() {
         console.error('[AdminOverview] Failed to load employee data:', error);
       }
     };
-
+    
     loadEmployeeData();
   }, []);
 
@@ -138,7 +138,7 @@ export default function AdminOverview() {
       emp.id?.toString() === userId ||
       emp.employee_number?.toString() === userId
     );
-
+    
     if (employee) {
       return employee.user_name || 
              (employee.first_name && employee.last_name ? `${employee.first_name} ${employee.last_name}` : null) ||
@@ -164,7 +164,7 @@ export default function AdminOverview() {
   const calculateAnalytics = () => {
     const currentRequests = leaveRequests as any[];
     const transactions = leaveTransactions as any[];
-
+    
     console.log('[AdminOverview] Calculating analytics from:', {
       transactionCount: transactions.length,
       requestCount: currentRequests.length,
@@ -173,11 +173,11 @@ export default function AdminOverview() {
       requestStatuses: Array.from(new Set(currentRequests.map(r => r.status))),
       transactionData: transactions.slice(0, 2)
     });
-
+    
     const pending = currentRequests.filter(req => req.status === 'pending').length;
     const approved = currentRequests.filter(req => req.status === 'approved').length;
     const rejected = currentRequests.filter(req => req.status === 'rejected').length;
-
+    
     console.log('[AdminOverview] Request status counts:', {
       pending,
       approved,
@@ -205,15 +205,15 @@ export default function AdminOverview() {
       !t.description?.includes('Opening balance') &&
       !t.description?.includes('imported from Excel')
     );
-
+    
     const availed = Math.abs(deductionTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0));
-
+    
     const additionTransactions = transactions.filter(t => t.transactionType === 'addition');
     const totalGranted = additionTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
-
+    
     const encashedTransactions = transactions.filter(t => t.description?.includes('encashed'));
     const encashed = Math.abs(encashedTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0));
-
+    
     const lapsedTransactions = transactions.filter(t => t.description?.includes('lapsed'));
     const lapsed = Math.abs(lapsedTransactions.reduce((sum, t) => sum + parseFloat(t.amount || 0), 0));
 
@@ -234,7 +234,7 @@ export default function AdminOverview() {
 
     // Calculate working days from approved requests
     const approvedRequests = currentRequests.filter(req => req.status === 'approved');
-
+    
     console.log('[AdminOverview] Working days calculation debug:', {
       totalRequests: currentRequests.length,
       approvedCount: approvedRequests.length,
@@ -247,12 +247,12 @@ export default function AdminOverview() {
         leaveTypeName: req.leaveTypeName
       }))
     });
-
+    
     const workingDaysAvailed = approvedRequests.reduce((sum, req) => {
       const days = parseFloat(req.workingDays || 0);
       return sum + days;
     }, 0);
-
+    
     console.log('[AdminOverview] Working days total calculation:', {
       totalWorkingDays: workingDaysAvailed,
       approvedRequestCount: approvedRequests.length,
@@ -288,7 +288,7 @@ export default function AdminOverview() {
   const calculateMonthlyData = () => {
     const transactions = leaveTransactions as any[];
     const requests = leaveRequests as any[];
-
+    
     console.log('[AdminOverview] Raw data analysis:', {
       transactionCount: transactions.length,
       requestCount: requests.length,
@@ -298,25 +298,25 @@ export default function AdminOverview() {
       requestYears: requests.map(r => new Date(r.startDate).getFullYear()).filter((v, i, a) => a.indexOf(v) === i),
       transactionYears: transactions.map(t => new Date(t.createdAt || t.transactionDate).getFullYear()).filter((v, i, a) => a.indexOf(v) === i)
     });
-
+    
     const monthlyData = Array.from({ length: 12 }, (_, monthIndex) => {
       const monthName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][monthIndex];
-
+      
       // Filter approved requests for this month across all years
       const monthRequests = requests.filter(req => {
         if (req.status !== 'approved') return false;
         const startDate = new Date(req.startDate);
         return startDate.getMonth() === monthIndex;
       });
-
+      
       // Now that leave type names are working, calculate by actual leave type
       const leaveByType: Record<string, number> = {};
-
+      
       monthRequests.forEach(req => {
         const leaveTypeName = req.leaveTypeName || 'Other Leave';
         const workingDays = parseFloat(req.workingDays) || 1;
         leaveByType[leaveTypeName] = (leaveByType[leaveTypeName] || 0) + workingDays;
-
+        
         // Debug each request processing
         if (monthIndex === 0) { // Only log for January to avoid spam
           console.log(`[AdminOverview] Processing ${monthName} request:`, {
@@ -328,9 +328,9 @@ export default function AdminOverview() {
           });
         }
       });
-
+      
       const total = Object.values(leaveByType).reduce((sum, days) => sum + days, 0);
-
+      
       return {
         month: monthName,
         breakdown: leaveByType,
@@ -338,23 +338,23 @@ export default function AdminOverview() {
         requestCount: monthRequests.length
       };
     });
-
+    
     console.log('[AdminOverview] Monthly data calculated:', monthlyData);
     return monthlyData;
   };
 
   const analytics = calculateAnalytics();
   const monthlyData = calculateMonthlyData();
-
+  
   // Get all configured leave types from database (includes all types, even with zero usage)
   const configuredLeaveTypeNames = (leaveTypes as any[])?.map(lt => lt.name) || [];
-
+  
   // Get leave types that have actual requests
   const usedLeaveTypes = Array.from(new Set((leaveRequests as any[])?.map(req => req.leaveTypeName).filter(Boolean) || []));
-
+  
   // Combine both lists to show ALL leave types (configured ones + any others from requests)
   const allLeaveTypes = Array.from(new Set([...configuredLeaveTypeNames, ...usedLeaveTypes]));
-
+  
   console.log('[AdminOverview] Debug leave types analysis:', {
     totalRequests: (leaveRequests as any[])?.length || 0,
     configuredLeaveTypes: configuredLeaveTypeNames,
@@ -368,26 +368,26 @@ export default function AdminOverview() {
       status: req.status
     }))
   });
-
+  
   // Create dynamic color mapping for leave types
   const leaveTypeColors: Record<string, string> = {};
   const colorClasses = ['bg-blue-500', 'bg-orange-500', 'bg-red-500', 'bg-green-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-indigo-500'];
   allLeaveTypes.forEach((leaveType, index) => {
     leaveTypeColors[leaveType] = colorClasses[index % colorClasses.length];
   });
-
+  
 
 
   // Calculate reason for leaves data
   const calculateReasonData = () => {
     const approvedRequests = (leaveRequests as any[]).filter(req => req.status === 'approved');
     const reasonCounts: { [key: string]: number } = {};
-
+    
     approvedRequests.forEach(req => {
       const reason = req.reason || 'Other';
       reasonCounts[reason] = (reasonCounts[reason] || 0) + 1;
     });
-
+    
     return Object.entries(reasonCounts).map(([reason, count]) => ({
       name: reason.charAt(0).toUpperCase() + reason.slice(1),
       value: count
@@ -415,13 +415,13 @@ export default function AdminOverview() {
   // Get current requests to display
   const getCurrentRequests = () => {
     let requests = leaveRequests as any[];
-
+    
     if (activeRequestTab === "BTO") {
       requests = ptoRequests as any[];
     } else if (activeRequestTab === "Comp-off") {
       requests = compOffRequests as any[];
     }
-
+    
     if (selectedApprovalTab === "Pending") {
       return requests.filter(req => req.status === 'pending').slice(0, 4);
     } else if (selectedApprovalTab === "Approved") {
@@ -429,7 +429,7 @@ export default function AdminOverview() {
     } else if (selectedApprovalTab === "Rejected") {
       return requests.filter(req => req.status === 'rejected').slice(0, 4);
     }
-
+    
     return requests.slice(0, 4);
   };
 
@@ -462,10 +462,10 @@ export default function AdminOverview() {
     const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
-
+    
     const days = [];
     const currentDay = new Date(startDate);
-
+    
     while (currentDay <= lastDay || currentDay.getDay() !== 0) {
       const day = new Date(currentDay);
       const dayNumber = day.getDate();
@@ -474,7 +474,7 @@ export default function AdminOverview() {
       const isWeekend = day.getDay() === 0 || day.getDay() === 6;
       const holiday = workPatternIsHoliday ? workPatternIsHoliday(day) : false;
       const holidayDetails = holiday && workPatternGetHolidayDetails ? workPatternGetHolidayDetails(day) : null;
-
+      
       // Find approved leaves for this day
       const leavesOnDay = (leaveRequests as any[]).filter(req => {
         if (req.status !== 'approved') return false;
@@ -482,7 +482,7 @@ export default function AdminOverview() {
         const endDate = new Date(req.endDate);
         return day >= startDate && day <= endDate;
       });
-
+      
       days.push({
         date: day,
         dayNumber,
@@ -492,10 +492,10 @@ export default function AdminOverview() {
         holiday: holidayDetails,
         leaves: leavesOnDay
       });
-
+      
       currentDay.setDate(currentDay.getDate() + 1);
     }
-
+    
     return days;
   };
 
@@ -603,7 +603,7 @@ export default function AdminOverview() {
                   <ExternalLink className="h-4 w-4" />
                 </Button>
               </div>
-
+              
               {/* Request Type Tabs */}
               <div className="flex space-x-1 bg-muted p-1 rounded-lg">
                 {requestTabs.map((tab) => (
@@ -739,13 +739,13 @@ export default function AdminOverview() {
                     <div key={day} className="p-1">{day}</div>
                   ))}
                 </div>
-
+                
                 {/* Calendar Days */}
                 <div className="grid grid-cols-7 gap-1">
                   {calendarDays.map((day, index) => {
                     const hasLeaves = day.leaves.length > 0;
                     const multipleEmployees = day.leaves.length > 1;
-
+                    
                     return (
                       <div key={index}>
                         {hasLeaves ? (
@@ -882,7 +882,7 @@ export default function AdminOverview() {
                 </Select>
               </div>
             </div>
-
+            
             {/* Analytics Type Tabs */}
             <div className="flex space-x-1 bg-muted p-1 rounded-lg">
               {["Leaves", "BTO", "Comp-off"].map((tab) => (
@@ -957,15 +957,15 @@ export default function AdminOverview() {
                     <span>20</span>
                     <span>0</span>
                   </div>
-
+                  
                   {/* Chart bars */}
                   <div className="flex items-end justify-between flex-1 h-full space-x-4">
                     {monthlyData.map((data, i) => {
                       const maxValue = Math.max(...monthlyData.map(m => m.total), 50); // Minimum scale of 50
                       const heightPercentage = data.total > 0 ? Math.max((data.total / maxValue) * 100, 5) : 0;
-
+                      
                       // Chart rendering with enhanced visibility
-
+                      
                       return (
                         <div key={i} className="flex flex-col items-center space-y-1 flex-1 group relative">
                           <div 
@@ -981,7 +981,7 @@ export default function AdminOverview() {
                             {data.total > 0 && allLeaveTypes.map(leaveType => {
                               const value = data.breakdown?.[leaveType] || 0;
                               if (value <= 0) return null;
-
+                              
                               return (
                                 <div 
                                   key={leaveType}
@@ -994,7 +994,7 @@ export default function AdminOverview() {
                               );
                             })}
                           </div>
-
+                          
                           {/* Dynamic hover tooltip - shows on entire column hover */}
                           {data.total > 0 && (
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 
@@ -1014,7 +1014,7 @@ export default function AdminOverview() {
                               </div>
                             </div>
                           )}
-
+                          
                           <span className="text-xs text-gray-500">
                             {data.month}
                           </span>
@@ -1023,7 +1023,7 @@ export default function AdminOverview() {
                     })}
                   </div>
                 </div>
-
+                
                 {/* Dynamic Legend */}
                 <div className="flex items-center justify-center flex-wrap gap-4 mt-4">
                   {allLeaveTypes.map(leaveType => {
@@ -1060,10 +1060,10 @@ export default function AdminOverview() {
                   console.log('[AdminOverview] All holidays:', allHolidays);
                   console.log('[AdminOverview] Filtered holidays:', filteredHolidays);
                   console.log('[AdminOverview] Work pattern selected holidays:', workPattern?.selectedHolidays);
-
+                  
                   // Use the same logic as Holidays page
                   const holidaysToDisplay = filteredHolidays;
-
+                  
                   if (!holidaysToDisplay || holidaysToDisplay.length === 0) {
                     return (
                       <div className="text-center py-4 text-muted-foreground">
@@ -1071,7 +1071,7 @@ export default function AdminOverview() {
                       </div>
                     );
                   }
-
+                  
                   // Filter to show only upcoming holidays (future dates)
                   const now = new Date();
                   const upcomingHolidays = holidaysToDisplay
@@ -1090,7 +1090,7 @@ export default function AdminOverview() {
                       return dateA.getTime() - dateB.getTime();
                     })
                     .slice(0, 5);
-
+                  
                   if (upcomingHolidays.length === 0) {
                     return (
                       <div className="text-center py-4 text-muted-foreground">
@@ -1098,7 +1098,7 @@ export default function AdminOverview() {
                       </div>
                     );
                   }
-
+                  
                   return upcomingHolidays.map((holiday: any, index: number) => (
                     <div key={index} className="flex items-center justify-between">
                       <div>
@@ -1109,7 +1109,7 @@ export default function AdminOverview() {
                               // Use date or selectedDate field (same as Holidays page)
                               const dateString = holiday.date || holiday.selectedDate;
                               const date = new Date(dateString);
-
+                              
                               if (isNaN(date.getTime())) {
                                 return 'Date not available';
                               }
@@ -1134,286 +1134,7 @@ export default function AdminOverview() {
           </Card>
         </div>
 
-        {/* Admin Reports Section */}
-        <div className="mt-6 space-y-6">
-          {/* BTO Report */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <BarChart3 className="h-5 w-5" />
-                <span>BTO Report</span>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Comprehensive overview of all BTO requests with employee details
-              </p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="font-semibold">Employee Name</TableHead>
-                      <TableHead className="font-semibold">Application ID</TableHead>
-                      <TableHead className="font-semibold">BTO Type</TableHead>
-                      <TableHead className="font-semibold">From Date</TableHead>
-                      <TableHead className="font-semibold">To Date</TableHead>
-                      <TableHead className="font-semibold">Total Hours</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="font-semibold">Applied Date</TableHead>
-                      <TableHead className="font-semibold">Reason</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      const btoData = ptoRequests as any[];
 
-                      if (btoData.length === 0) {
-                        return (
-                          <TableRow>
-                            <TableCell colSpan={9} className="py-8 px-4 text-center text-muted-foreground">
-                              No BTO requests found for this organization
-                            </TableCell>
-                          </TableRow>
-                        );
-                      }
-
-                      return btoData.map((request: any, index: number) => (
-                        <TableRow key={request.id || index} className="hover:bg-gray-50">
-                          <TableCell className="font-medium">
-                            {getEmployeeName(request.userId)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-blue-50 text-blue-800">
-                              BTO-{request.id}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">
-                              {request.ptoVariantName || 'Standard BTO'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {request.fromDate ? new Date(request.fromDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric', 
-                              year: 'numeric'
-                            }) : 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {request.toDate ? new Date(request.toDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            }) : 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-mono text-sm">
-                              {request.totalHours || request.hours || 'N/A'}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={
-                                request.status === 'approved' ? 'default' :
-                                request.status === 'pending' ? 'secondary' :
-                                request.status === 'rejected' ? 'destructive' : 'outline'
-                              }
-                              className={
-                                request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                request.status === 'rejected' ? 'bg-red-100 text-red-800' : ''
-                              }
-                            >
-                              {request.status?.charAt(0).toUpperCase() + request.status?.slice(1) || 'Unknown'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {request.createdAt ? new Date(request.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            }) : 'N/A'}
-                          </TableCell>
-                          <TableCell className="max-w-xs">
-                            <div className="text-sm text-muted-foreground truncate" title={request.reason}>
-                              {request.reason || 'No reason provided'}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ));
-                    })()}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* BTO Summary Statistics */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-gray-50">
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="text-sm text-blue-600 font-medium">Total BTO Requests</div>
-                  <div className="text-2xl font-bold text-blue-900">
-                    {(ptoRequests as any[]).length}
-                  </div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-sm text-green-600 font-medium">Approved</div>
-                  <div className="text-2xl font-bold text-green-900">
-                    {(ptoRequests as any[]).filter((req: any) => req.status === 'approved').length}
-                  </div>
-                </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-sm text-yellow-600 font-medium">Pending</div>
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {(ptoRequests as any[]).filter((req: any) => req.status === 'pending').length}
-                  </div>
-                </div>
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="text-sm text-red-600 font-medium">Rejected</div>
-                  <div className="text-2xl font-bold text-red-900">
-                    {(ptoRequests as any[]).filter((req: any) => req.status === 'rejected').length}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Comp-off Report */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <FileText className="h-5 w-5" />
-                <span>Comp-off Report</span>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Detailed overview of all compensatory off requests and approvals
-              </p>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50">
-                      <TableHead className="font-semibold">Employee Name</TableHead>
-                      <TableHead className="font-semibold">Application ID</TableHead>
-                      <TableHead className="font-semibold">Type</TableHead>
-                      <TableHead className="font-semibold">Work Date</TableHead>
-                      <TableHead className="font-semibold">Comp-off Date</TableHead>
-                      <TableHead className="font-semibold">Total Days</TableHead>
-                      <TableHead className="font-semibold">Status</TableHead>
-                      <TableHead className="font-semibold">Applied Date</TableHead>
-                      <TableHead className="font-semibold">Reason</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      const compOffData = compOffRequests as any[];
-
-                      if (compOffData.length === 0) {
-                        return (
-                          <TableRow>
-                            <TableCell colSpan={9} className="py-8 px-4 text-center text-muted-foreground">
-                              No comp-off requests found for this organization
-                            </TableCell>
-                          </TableRow>
-                        );
-                      }
-
-                      return compOffData.map((request: any, index: number) => (
-                        <TableRow key={request.id || index} className="hover:bg-gray-50">
-                          <TableCell className="font-medium">
-                            {getEmployeeName(request.userId)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-purple-50 text-purple-800">
-                              CO-{request.id}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                              {request.type?.charAt(0).toUpperCase() + request.type?.slice(1) || 'Standard'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {request.workDate ? new Date(request.workDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            }) : 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            {request.compOffDate ? new Date(request.compOffDate).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric'
-                            }) : 'N/A'}
-                          </TableCell>
-                          <TableCell>
-                            <span className="font-mono text-sm">
-                              {request.days || '1'} day{(request.days && request.days > 1) ? 's' : ''}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={
-                                request.status === 'approved' ? 'default' :
-                                request.status === 'pending' ? 'secondary' :
-                                request.status === 'rejected' ? 'destructive' : 'outline'
-                              }
-                              className={
-                                request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                request.status === 'rejected' ? 'bg-red-100 text-red-800' : ''
-                              }
-                            >
-                              {request.status?.charAt(0).toUpperCase() + request.status?.slice(1) || 'Unknown'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {request.createdAt ? new Date(request.createdAt).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric'
-                            }) : 'N/A'}
-                          </TableCell>
-                          <TableCell className="max-w-xs">
-                            <div className="text-sm text-muted-foreground truncate" title={request.reason}>
-                              {request.reason || 'No reason provided'}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ));
-                    })()}
-                  </TableBody>
-                </Table>
-              </div>
-
-              {/* Comp-off Summary Statistics */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-gray-50">
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="text-sm text-purple-600 font-medium">Total Comp-off Requests</div>
-                  <div className="text-2xl font-bold text-purple-900">
-                    {(compOffRequests as any[]).length}
-                  </div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="text-sm text-green-600 font-medium">Approved</div>
-                  <div className="text-2xl font-bold text-green-900">
-                    {(compOffRequests as any[]).filter((req: any) => req.status === 'approved').length}
-                  </div>
-                </div>
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <div className="text-sm text-yellow-600 font-medium">Pending</div>
-                  <div className="text-2xl font-bold text-yellow-900">
-                    {(compOffRequests as any[]).filter((req: any) => req.status === 'pending').length}
-                  </div>
-                </div>
-                <div className="bg-red-50 p-4 rounded-lg">
-                  <div className="text-sm text-red-600 font-medium">Rejected</div>
-                  <div className="text-2xl font-bold text-red-900">
-                    {(compOffRequests as any[]).filter((req: any) => req.status === 'rejected').length}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
 
       </div>
     </Layout>
