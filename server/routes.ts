@@ -2,14 +2,13 @@ const { createServer } = require("http");
 const { neon } = require("@neondatabase/serverless");
 const { drizzle } = require("drizzle-orm/neon-http");
 const { desc, eq, and, sql, inArray } = require("drizzle-orm");
-const schema = require("@shared/schema");
+const schema = require("../shared/schema");
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
 const XLSX = require("xlsx");
 const dotenv = require("dotenv");
 
 import type { Express } from "express";
-import type { User } from "@shared/schema";
 
 // Utility function to extract and validate org_id from headers
 function getOrgIdFromHeaders(req) {

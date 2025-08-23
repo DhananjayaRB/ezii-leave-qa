@@ -21,5 +21,8 @@
     "noFallthroughCasesInSwitch": true
   },
   "include": ["server/**/*", "shared/**/*"],
-  "exclude": ["client/**/*", "node_modules", "dist"]
+  "exclude": ["client/**/*", "node_modules", "dist"],
+  "ts-node": {
+    "esm": false
+  }
 }
