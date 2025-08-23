@@ -1,0 +1,17 @@
+
+{
+  "appService.zipIgnorePattern": [
+    "node_modules{,/**}",
+    ".vscode{,/**}",
+    ".git{,/**}",
+    ".gitignore",
+    "*.md",
+    "attached_assets{,/**}",
+    "client/src{,/**}",
+    "*.ts",
+    "*.tsx",
+    "!dist/**"
+  ],
+  "appService.deploySubpath": ".",
+  "appService.defaultWebAppToDeploy": "/subscriptions/your-subscription-id/resourceGroups/your-resource-group/providers/Microsoft.Web/sites/your-app-name"
+}
