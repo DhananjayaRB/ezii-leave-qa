@@ -5,11 +5,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "nodemon server/index.ts",
-    "build": "tsc && vite build",
-    "start": "node dist/server/index.js",
+    "build": "vite build && tsc",
+    "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview",
     "azure:build": "npm install && npm run build",
-    "azure:start": "node dist/server/index.js"
+    "azure:start": "NODE_ENV=production node dist/index.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
