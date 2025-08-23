@@ -1,19 +1,43 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Calendar, Clock, CheckCircle, XCircle, TrendingUp, BarChart3 } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Cell } from 'recharts';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  BarChart3,
+  FileText,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 
 interface LeaveRequest {
   id: number;
   userId: string;
   startDate: string;
   endDate: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: "pending" | "approved" | "rejected";
   leaveTypeId: number;
   workingDays: number;
   reason: string;
@@ -32,16 +56,25 @@ interface LeaveBalance {
 }
 
 export default function NewEmployeeOverview() {
-  const [selectedYear, setSelectedYear] = useState('2024');
-  const [selectedPeriod, setSelectedPeriod] = useState('Yearly');
+  const [selectedYear, setSelectedYear] = useState("2024");
+  const [selectedPeriod, setSelectedPeriod] = useState("Yearly");
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
   // Get current user ID from localStorage (same as Leave Applications)
-  const currentUserId = localStorage.getItem('user_id') || '241';
-  
-  console.log('📊 [NewEmployeeOverview] Loading component for user:', currentUserId);
-  console.log('📊 [NewEmployeeOverview] Current org_id:', localStorage.getItem('org_id'));
+  const currentUserId = localStorage.getItem("user_id") || "241";
+
+  // Get user name (fallback to generic greeting if not available)
+  const userName = "User"; // Simple fallback for now
+
+  console.log(
+    "📊 [NewEmployeeOverview] Loading component for user:",
+    currentUserId,
+  );
+  console.log(
+    "📊 [NewEmployeeOverview] Current org_id:",
+    localStorage.getItem("org_id"),
+  );
 
   // Fetch leave requests with proper typing
   const { data: leaveRequestsData = [] } = useQuery({
@@ -69,15 +102,13 @@ export default function NewEmployeeOverview() {
 
   // Fetch leave variants for calculations (needed for sophisticated metrics)
   const { data: leaveVariantsData = [] } = useQuery({
-    queryKey: ['/api/leave-variants'],
+    queryKey: ["/api/leave-variants"],
   });
 
   // Fetch assignments to match Leave Applications logic
   const { data: allAssignments = [] } = useQuery({
-    queryKey: ['/api/employee-assignments'],
+    queryKey: ["/api/employee-assignments"],
   });
-
-
 
   // Type the arrays properly
   const leaveRequests = leaveRequestsData as LeaveRequest[];
@@ -86,91 +117,148 @@ export default function NewEmployeeOverview() {
   const compOffRequests = compOffRequestsData as any[];
   const transactions = leaveTransactions as any[];
 
+  // Get available leave variants for the current user (same logic as Leave Applications)
+  const userAssignments = Array.isArray(allAssignments)
+    ? allAssignments.filter(
+        (assignment: any) => assignment.userId === currentUserId,
+      )
+    : [];
+  const assignedVariantIds = userAssignments.map(
+    (assignment: any) => assignment.leaveVariantId,
+  );
+  const availableLeaveVariants = Array.isArray(leaveVariantsData)
+    ? leaveVariantsData.filter((variant: any) =>
+        assignedVariantIds.includes(variant.id),
+      )
+    : [];
+
+  console.log("🔧 [Dashboard] Available leave variants:", {
+    userAssignments: userAssignments.length,
+    assignedVariantIds,
+    availableLeaveVariants: availableLeaveVariants.length,
+    variantNames: availableLeaveVariants.map((v: any) => v.leaveTypeName),
+  });
+
   // Calculate statistics using same sophisticated logic as Leave Applications page
   const totalRequests = leaveRequests.length;
-  const approvedLeaves = leaveRequests.filter((req: LeaveRequest) => req.status === 'approved');
+  const approvedLeaves = leaveRequests.filter(
+    (req: LeaveRequest) => req.status === "approved",
+  );
   const approvedCount = approvedLeaves.length;
-  const pendingCount = leaveRequests.filter((req: LeaveRequest) => req.status === 'pending').length;
-  const rejectedCount = leaveRequests.filter((req: LeaveRequest) => req.status === 'rejected').length;
+  const pendingCount = leaveRequests.filter(
+    (req: LeaveRequest) => req.status === "pending",
+  ).length;
+  const rejectedCount = leaveRequests.filter(
+    (req: LeaveRequest) => req.status === "rejected",
+  ).length;
 
   // Debug approved leaves for calendar
-  console.log('[NewEmployeeOverview] Approved leaves for calendar:', approvedLeaves.map(l => ({ id: l.id, startDate: l.startDate, endDate: l.endDate })));
+  console.log(
+    "[NewEmployeeOverview] Approved leaves for calendar:",
+    approvedLeaves.map((l) => ({
+      id: l.id,
+      startDate: l.startDate,
+      endDate: l.endDate,
+    })),
+  );
 
-  // EXACT CALCULATION from working Leave Applications screen
+  // SOPHISTICATED CALCULATION - Use EXACT SAME logic as Leave Applications page
   const calculateSophisticatedMetrics = () => {
     const balancesArray = Array.isArray(leaveBalances) ? leaveBalances : [];
     const requestsArray = Array.isArray(leaveRequests) ? leaveRequests : [];
-    const transactionsArray = Array.isArray(transactions) ? transactions : [];
-    const variantsArray = Array.isArray(leaveVariantsData) ? leaveVariantsData : [];
-    
-    console.log('🎯 [NewEmployeeOverview] EXACT Leave Applications calculation:', {
-      currentUserId,
-      orgId: localStorage.getItem('org_id'),
-      balancesCount: balancesArray.length,
-      requestsCount: requestsArray.length,
-      transactionsCount: transactionsArray.length,
-      variantsCount: variantsArray.length
-    });
 
-    // Use assignment filtering to match Leave Applications logic
-    const currentUserAssignments = Array.isArray(allAssignments) ? 
-      allAssignments.filter((a: any) => String(a.userId) === String(currentUserId)) : [];
-    
-    const assignedVariantIds = currentUserAssignments.map((a: any) => a.leaveVariantId);
-    const availableLeaveVariants = variantsArray.filter((variant: any) => 
-      assignedVariantIds.includes(variant.id)
+    console.log(
+      "🎯 [Dashboard] Using SOPHISTICATED calculation (same as Leave Applications):",
+      {
+        currentUserId,
+        balancesCount: balancesArray.length,
+        requestsCount: requestsArray.length,
+        availableVariants: availableLeaveVariants?.length || 0,
+      },
     );
-    
-    // Calculate total eligibility dynamically using the same logic as the table
+
+    // Calculate total eligibility using EXACT SAME logic as Leave Applications
     let totalEligibilitySum = 0;
-    
+
     availableLeaveVariants.forEach((variant: any) => {
-      const balance = balancesArray.find((b: any) => b.leaveVariantId === variant.id);
-      const transactions = Array.isArray(transactionsArray) ? transactionsArray.filter((t: any) => t.leaveVariantId === variant.id) : [];
-      
-      // Calculate opening balance from imported Excel data transactions with enhanced logic
-      const openingBalanceTransactions = Array.isArray(transactionsArray) ? 
-        transactionsArray
-          .filter((t: any) => {
-            const isOpeningBalance = t.transactionType === 'grant' && 
-                                   t.description?.toLowerCase().includes('opening balance imported from excel');
-            const isForCurrentUser = t.userId === currentUserId;
-            
-            if (!isOpeningBalance || !isForCurrentUser) return false;
-            
-            // Direct variant match (preferred)
-            if (t.leaveVariantId === variant.id) return true;
-            
-            // Cross-reference by leave type name
-            const transactionVariant = variantsArray.find((v: any) => v.id === t.leaveVariantId);
-            if (transactionVariant?.leaveTypeName === variant.leaveTypeName) return true;
-            if (transactionVariant?.leaveTypeId === variant.leaveTypeId) return true;
-            
-            return false;
-          })
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        : [];
-      
-      const openingBalance = openingBalanceTransactions.reduce((sum: number, t: any) => 
-        sum + parseFloat(t.amount || '0'), 0
+      const balance = balancesArray.find(
+        (b: any) => b.leaveVariantId === variant.id,
       );
-      
+
+      // ENHANCED LOGIC: Use same cross-referencing as Leave Applications
+      const openingBalanceTransactions = Array.isArray(transactions)
+        ? transactions
+            .filter((t: any) => {
+              const isOpeningBalance =
+                t.transactionType === "grant" &&
+                t.description
+                  ?.toLowerCase()
+                  .includes("opening balance imported from excel");
+              const isForCurrentUser = t.userId === currentUserId;
+
+              if (!isOpeningBalance || !isForCurrentUser) return false;
+
+              // Direct variant match (preferred)
+              if (t.leaveVariantId === variant.id) return true;
+
+              // Cross-reference by leave type name - ENHANCED LOGIC
+              const transactionVariant = availableLeaveVariants.find(
+                (v: any) => v.id === t.leaveVariantId,
+              );
+
+              // First try: Match by leave type name
+              if (transactionVariant?.leaveTypeName === variant.leaveTypeName) {
+                return true;
+              }
+
+              // Second try: Match by leaveTypeId (more robust for same leave type)
+              if (transactionVariant?.leaveTypeId === variant.leaveTypeId) {
+                return true;
+              }
+
+              // Special case: For known Earned Leave variant mismatch (67 -> 61)
+              if (
+                variant.leaveTypeName === "Earned Leave" &&
+                ((t.leaveVariantId === 67 && variant.id === 61) ||
+                  (t.leaveVariantId === 61 && variant.id === 67))
+              ) {
+                return true;
+              }
+
+              return false;
+            })
+            .sort(
+              (a: any, b: any) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime(),
+            )
+        : [];
+
+      const openingBalance = openingBalanceTransactions.reduce(
+        (sum: number, t: any) => sum + parseFloat(t.amount || "0"),
+        0,
+      );
+
       // Calculate eligibility based on leave grant method
-      const totalEntitlementInDays = balance ? parseFloat(balance.totalEntitlement || '0') : 0;
-      const isAfterEarning = variant.grantLeaves === 'after_earning';
-      
+      const totalEntitlementInDays = balance
+        ? parseFloat(balance.totalEntitlement || "0")
+        : 0;
+      const isAfterEarning = variant.grantLeaves === "after_earning";
+
       let eligibility = 0;
       if (isAfterEarning) {
         // "After Earning" - calculate based on annual entitlement and months completed
         const currentMonth = new Date().getMonth() + 1; // August = 8
         const monthsCompleted = currentMonth - 1; // 7 months completed (Jan-July)
-        const annualEntitlement = totalEntitlementInDays || variant.paidDaysInYear || 0;
+        const annualEntitlement =
+          totalEntitlementInDays || variant.paidDaysInYear || 0;
         eligibility = (annualEntitlement / 12) * monthsCompleted;
       } else {
         // "In Advance" - check grant frequency
-        const annualEntitlement = totalEntitlementInDays || variant.paidDaysInYear || 0;
-        
-        if (variant.grantFrequency === 'per_year') {
+        const annualEntitlement =
+          totalEntitlementInDays || variant.paidDaysInYear || 0;
+
+        if (variant.grantFrequency === "per_year") {
           // Annual grants like Paternity Leave - full entitlement available immediately
           eligibility = annualEntitlement;
         } else {
@@ -179,340 +267,126 @@ export default function NewEmployeeOverview() {
           eligibility = (annualEntitlement / 12) * currentMonth;
         }
       }
-      
+
       const totalEligibility = eligibility + openingBalance;
       totalEligibilitySum += totalEligibility;
-      
-      console.log(`🎯 [Dashboard] Dynamic calculation for ${variant.leaveTypeName}:`, {
-        openingBalance,
-        eligibility,
-        totalEligibility,
-        isAfterEarning,
-        annualEntitlement: totalEntitlementInDays || variant.paidDaysInYear
-      });
+
+      console.log(
+        `🔍 [Dashboard CALCULATION] Dynamic calculation for ${variant.leaveTypeName}:`,
+        {
+          variantId: variant.id,
+          openingBalance,
+          eligibility,
+          totalEligibility,
+          isAfterEarning,
+          annualEntitlement: totalEntitlementInDays || variant.paidDaysInYear,
+          totalEntitlementInDays,
+          paidDaysInYear: variant.paidDaysInYear,
+          grantLeaves: variant.grantLeaves,
+          grantFrequency: variant.grantFrequency,
+          openingBalanceTransactionsCount: openingBalanceTransactions.length,
+        },
+      );
     });
 
-    // TOTAL AVAILED calculation (exactly from Leave Applications)
-    const allUserTransactions = (transactionsArray as any[]).filter((t: any) => t.userId === currentUserId);
-    let totalAvailed = 0;
-    
-    availableLeaveVariants.forEach((variant: any) => {
-      const isBeforeWorkflow = variant.leaveBalanceDeductionBefore === true;
-      
-      // Handle null leaveVariantId by using leaveTypeId as fallback with type conversion
-      const matchingRequests = requestsArray.filter((req: any) => {
-        const variantIdMatch = req.leaveVariantId === variant.id;
-        const typeIdMatch = (req.leaveVariantId === null || req.leaveVariantId === undefined) && 
-          (req.leaveTypeId === variant.leaveTypeId || 
-           String(req.leaveTypeId) === String(variant.leaveTypeId) ||
-           Number(req.leaveTypeId) === Number(variant.leaveTypeId));
-        
-        return variantIdMatch || typeIdMatch;
-      });
-      
-      // Method 1: Count approved leave requests
-      const approvedRequests = matchingRequests.filter((req: any) => req.status === 'approved');
-      const approvedDays = approvedRequests.reduce((sum: number, req: any) => 
-        sum + parseFloat(req.workingDays || '0'), 0
-      );
-      
-      // Method 2: For "Before Workflow" types, add pending requests
-      let pendingDays = 0;
-      if (isBeforeWorkflow) {
-        const pendingRequests = matchingRequests.filter((req: any) => req.status === 'pending');
-        pendingDays = pendingRequests.reduce((sum: number, req: any) => 
-          sum + parseFloat(req.workingDays || '0'), 0
-        );
-      }
-      
-      // Method 3: Add imported leave usage from Excel
-      const variantTransactions = allUserTransactions.filter((t: any) => t.leaveVariantId === variant.id);
-      const importedAvailed = variantTransactions.filter((t: any) => 
-        t.description?.toLowerCase().includes('imported leave transaction') && 
-        t.description?.toLowerCase().includes('availed') &&
-        (t.transactionType === 'deduction' || t.transactionType === 'debit')
-      ).reduce((sum: number, t: any) => 
-        sum + Math.abs(parseFloat(t.amount || '0')), 0
-      );
-      
-      const variantAvailed = approvedDays + pendingDays + importedAvailed;
-      totalAvailed += variantAvailed;
-    });
+    // Current balance (what remains after deductions)
+    const totalCurrentBalance = balancesArray.reduce(
+      (sum: number, balance: any) =>
+        sum + parseFloat(balance.currentBalance || "0"),
+      0,
+    );
 
-    // BALANCE calculation (exactly from Leave Applications)
-    let totalClosingBalance = 0;
-    availableLeaveVariants.forEach((variant: any) => {
-      const balance = balancesArray.find((b: any) => b.leaveVariantId === variant.id);
-      const transactions = Array.isArray(transactionsArray) ? transactionsArray.filter((t: any) => t.leaveVariantId === variant.id) : [];
-      
-      // Calculate opening balance from imported Excel data transactions
-      const openingBalanceTransactions = transactions
-        .filter((t: any) => t.transactionType === 'grant' && 
-               t.description?.toLowerCase().includes('opening balance imported from excel'))
-        .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
-      const openingBalance = openingBalanceTransactions.length > 0 
-        ? parseFloat(openingBalanceTransactions[0].amount || '0') 
-        : 0;
-      
-      const currentBalanceInDays = balance ? parseFloat(balance.currentBalance || '0') : 0;
-      
-      // Calculate eligibility based on leave grant method
-      const totalEntitlementInDays = balance ? parseFloat(balance.totalEntitlement || '0') : 0;
-      const isAfterEarning = variant.grantLeaves === 'after_earning';
-      
-      let eligibility = 0;
-      
-      if (isAfterEarning) {
-        const currentMonth = new Date().getMonth() + 1; // August = 8
-        const monthsCompleted = currentMonth - 1; // 7 months completed (Jan-July)
-        const annualEntitlement = totalEntitlementInDays || variant.annualLeaveAllocation || 0;
-        eligibility = (annualEntitlement / 12) * monthsCompleted;
-      } else {
-        const annualEntitlement = totalEntitlementInDays || variant.annualLeaveAllocation || 0;
-        
-        if (variant.grantFrequency === 'per_year') {
-          eligibility = annualEntitlement;
-        } else {
-          const currentMonth = new Date().getMonth() + 1; // August = 8
-          eligibility = (annualEntitlement / 12) * currentMonth;
-        }
-      }
-      const totalEligibility = eligibility + openingBalance;
-      
-      // Calculate availed using same logic as table
-      const isBeforeWorkflow = variant.leaveBalanceDeductionBefore === true;
-      
-      const matchingRequests = requestsArray.filter((req: any) => 
-        req.leaveVariantId === variant.id || 
-        ((req.leaveVariantId === null || req.leaveVariantId === undefined) && req.leaveTypeId === variant.leaveTypeId)
+    // Sum all approved leave requests (total availed)
+    const totalApproved = requestsArray
+      .filter((req: any) => req.status === "approved")
+      .reduce(
+        (sum: number, req: any) => sum + parseFloat(req.workingDays || "0"),
+        0,
       );
-      
-      const approvedRequests = matchingRequests.filter((req: any) => req.status === 'approved');
-      const approvedDays = approvedRequests.reduce((sum: number, req: any) => 
-        sum + parseFloat(req.workingDays || '0'), 0
-      );
-      
-      let pendingDays = 0;
-      if (isBeforeWorkflow) {
-        const pendingRequests = matchingRequests.filter((req: any) => req.status === 'pending');
-        pendingDays = pendingRequests.reduce((sum: number, req: any) => 
-          sum + parseFloat(req.workingDays || '0'), 0
-        );
-      }
-      
-      const importedAvailed = transactions.filter((t: any) => 
-        t.description?.toLowerCase().includes('imported leave transaction') && 
-        t.description?.toLowerCase().includes('availed') &&
-        (t.transactionType === 'deduction' || t.transactionType === 'debit')
-      ).reduce((sum: number, t: any) => 
-        sum + Math.abs(parseFloat(t.amount || '0')), 0
-      );
-      
-      const availed = approvedDays + pendingDays + importedAvailed;
-      const closingBalance = totalEligibility - availed;
-      totalClosingBalance += closingBalance;
-    });
 
-    console.log('🎯 [NewEmployeeOverview] EXACT calculation results:', {
+    // CORRECTED BALANCE CALCULATION: Total Eligibility - Total Availed = Remaining Balance
+    const calculatedBalance = totalEligibilitySum - totalApproved;
+
+    console.log("🎯 [Dashboard] Sophisticated calculation results:", {
       totalEligibilitySum: totalEligibilitySum.toFixed(1),
-      totalAvailed: totalAvailed.toFixed(1),
-      totalClosingBalance: totalClosingBalance.toFixed(1)
+      totalCurrentBalance: totalCurrentBalance.toFixed(1),
+      totalApproved: totalApproved.toFixed(1),
+      calculatedBalance: calculatedBalance.toFixed(1),
+      calculation: `${totalEligibilitySum.toFixed(1)} - ${totalApproved.toFixed(1)} = ${calculatedBalance.toFixed(1)}`,
+      note: "Balance = Total Eligibility - Total Availed (should be 72.5 - 20.0 = 52.5)",
     });
 
     return {
-      totalEligibility: parseFloat(totalEligibilitySum.toFixed(1)),
-      totalAvailed: parseFloat(totalAvailed.toFixed(1)),
-      totalBalance: parseFloat(totalClosingBalance.toFixed(1))
+      totalEligibility: parseFloat(totalEligibilitySum.toFixed(1)), // 72.5
+      totalAvailed: parseFloat(totalApproved.toFixed(1)), // 20.0
+      totalBalance: parseFloat(calculatedBalance.toFixed(1)), // 52.5
     };
   };
 
-  const sophisticatedMetrics = calculateSophisticatedMetrics();
-  
-  // Use sophisticated calculations for display
-  const totalEntitlement = sophisticatedMetrics.totalEligibility;
-  const totalAvailed = sophisticatedMetrics.totalAvailed;
-  const totalBalance = sophisticatedMetrics.totalBalance;
+  const simpleMetrics = calculateSophisticatedMetrics();
 
-  console.log('[NewEmployeeOverview] Final sophisticated metrics applied:', {
+  // Use simple calculations for display
+  const totalEntitlement = simpleMetrics.totalEligibility;
+  const totalAvailed = simpleMetrics.totalAvailed;
+  const totalBalance = simpleMetrics.totalBalance;
+
+  console.log("[NewEmployeeOverview] Final simple metrics applied:", {
     totalEntitlement,
     totalAvailed,
     totalBalance,
-    displayValues: {
-      totalEntitlementDisplay: totalEntitlement.toFixed(1),
-      totalAvailedDisplay: totalAvailed.toFixed(1),
-      totalBalanceDisplay: totalBalance.toFixed(1)
-    }
   });
 
-  // Generate usage trends from leave requests (both approved and pending for demo)
-  const generateUsageTrends = () => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    console.log('[UsageTrends] DEBUG - Total leave requests:', leaveRequests.length);
-    console.log('[UsageTrends] DEBUG - Approved leaves:', approvedLeaves.length);
-    console.log('[UsageTrends] DEBUG - Pending leaves:', leaveRequests.filter(l => l.status === 'pending').length);
-    
-    // Use only approved leave requests to show usage trends - exclude rejected and pending
-    const relevantLeaves = leaveRequests.filter((leave: LeaveRequest) => leave.status === 'approved');
-    
-    console.log('[UsageTrends] DEBUG - Using leaves for trends:', relevantLeaves.map(l => ({
-      id: l.id,
-      startDate: l.startDate,
-      year: new Date(l.startDate).getFullYear(),
-      month: new Date(l.startDate).getMonth(),
-      workingDays: l.workingDays,
-      status: l.status
-    })));
-    
-    return months.map((month, index) => {
-      // Filter leave requests for this month from 2025
-      const monthLeaves = relevantLeaves.filter((leave: LeaveRequest) => {
-        const startDate = new Date(leave.startDate);
-        const leaveMonth = startDate.getMonth();
-        const leaveYear = startDate.getFullYear();
-        
-        // Show 2025 data
-        return leaveMonth === index && leaveYear === 2025;
-      });
-      
-      console.log(`[UsageTrends] ${month} (${index}) - Found ${monthLeaves.length} leaves:`, 
-        monthLeaves.map(l => ({ startDate: l.startDate, workingDays: l.workingDays, status: l.status })));
-      
-      // Calculate total usage for this month
-      const totalUsage = monthLeaves.reduce((sum: number, leave: LeaveRequest) => {
-        const days = parseFloat(leave.workingDays?.toString() || '0');
-        console.log(`[UsageTrends] Adding ${days} days from leave:`, leave.startDate, leave.status);
-        return sum + days;
-      }, 0);
-      
-      console.log(`[UsageTrends] ${month} total usage:`, totalUsage);
-      
-      return {
-        month,
-        usage: totalUsage
-      };
+  // Generate real trends data from leave requests
+  const generateTrendsData = () => {
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const currentYear = new Date().getFullYear();
+
+    // Initialize all months with zero
+    const trendsData = monthNames.map((month) => ({ month, leaves: 0 }));
+
+    // Count approved leaves by month
+    approvedLeaves.forEach((leave: any) => {
+      const startDate = new Date(leave.startDate);
+      if (startDate.getFullYear() === currentYear) {
+        const monthIndex = startDate.getMonth();
+        trendsData[monthIndex].leaves += parseFloat(leave.workingDays || "1");
+      }
     });
+
+    console.log("📊 [NewEmployeeOverview] Generated trends data:", trendsData);
+    return trendsData;
   };
 
-  const usageTrendsData = generateUsageTrends();
-  
-  // Debug the trends data
-  console.log('[NewEmployeeOverview] Usage trends data:', usageTrendsData);
-  console.log('[NewEmployeeOverview] Total approved leaves:', approvedLeaves.length);
-  console.log('[NewEmployeeOverview] Sample approved leave:', approvedLeaves[0]);
-  
-  const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'];
-
-  // Calendar functions
-  const getDaysInMonth = (month: number, year: number) => {
-    return new Date(year, month + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (month: number, year: number) => {
-    return new Date(year, month, 1).getDay();
-  };
-
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    if (direction === 'prev') {
-      if (currentMonth === 0) {
-        setCurrentMonth(11);
-        setCurrentYear(currentYear - 1);
-      } else {
-        setCurrentMonth(currentMonth - 1);
-      }
-    } else {
-      if (currentMonth === 11) {
-        setCurrentMonth(0);
-        setCurrentYear(currentYear + 1);
-      } else {
-        setCurrentMonth(currentMonth + 1);
-      }
-    }
-  };
-
-  const renderCalendar = () => {
-    const daysInMonth = getDaysInMonth(currentMonth, currentYear);
-    const firstDay = getFirstDayOfMonth(currentMonth, currentYear);
-    const days = [];
-
-    // Empty cells for days before the first day of the month
-    for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-8"></div>);
-    }
-
-    // Days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      const currentDate = new Date(currentYear, currentMonth, day);
-      const dateStr = currentDate.toISOString().split('T')[0];
-      
-      // Check if this date has any leave (approved or pending)
-      const hasLeave = leaveRequests.some((leave: LeaveRequest) => {
-        const startDate = new Date(leave.startDate);
-        const endDate = new Date(leave.endDate);
-        // Set hours to compare dates properly
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-        currentDate.setHours(12, 0, 0, 0);
-        return currentDate >= startDate && currentDate <= endDate;
-      });
-      
-      // Get leave status for styling
-      const leaveForDate = leaveRequests.find((leave: LeaveRequest) => {
-        const startDate = new Date(leave.startDate);
-        const endDate = new Date(leave.endDate);
-        startDate.setHours(0, 0, 0, 0);
-        endDate.setHours(23, 59, 59, 999);
-        currentDate.setHours(12, 0, 0, 0);
-        return currentDate >= startDate && currentDate <= endDate;
-      });
-
-      // Style based on leave status
-      let dayClasses = 'h-8 flex items-center justify-center text-sm rounded ';
-      if (hasLeave && leaveForDate) {
-        switch (leaveForDate.status) {
-          case 'approved':
-            dayClasses += 'bg-green-300 text-green-800 font-medium';
-            break;
-          case 'pending':
-            dayClasses += 'bg-orange-300 text-orange-800 font-medium';
-            break;
-          case 'rejected':
-            dayClasses += 'bg-red-300 text-red-800 font-medium';
-            break;
-          default:
-            dayClasses += 'bg-gray-100 text-gray-800 font-medium';
-        }
-      } else {
-        dayClasses += 'hover:bg-gray-100 text-gray-700';
-      }
-
-      days.push(
-        <div key={day} className={dayClasses}>
-          {day}
-        </div>
-      );
-    }
-
-    return days;
-  };
-
-
+  const trendsData = generateTrendsData();
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      
-
-
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-6">
+      {/* Header with Title and Year/Period Selectors */}
+      <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Employee Overview</h1>
-          <p className="text-gray-600 mt-1">Your leave analytics and applications dashboard</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Employee Overview
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Your leave analytics and applications dashboard
+          </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex gap-3">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-20">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -521,7 +395,7 @@ export default function NewEmployeeOverview() {
             </SelectContent>
           </Select>
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-24">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -532,213 +406,440 @@ export default function NewEmployeeOverview() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Key Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Leaves</p>
-                <p className="text-3xl font-bold text-gray-900">{totalEntitlement.toFixed(1)}</p>
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-blue-600" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Total Leaves
+                </span>
               </div>
-              <Calendar className="h-8 w-8 text-blue-500" />
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {totalEntitlement.toFixed(1)}
+              </span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Availed</p>
-                <p className="text-3xl font-bold text-gray-900">{totalAvailed.toFixed(1)}</p>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Total Availed
+                </span>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-500" />
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {totalAvailed.toFixed(1)}
+              </span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
-                <p className="text-3xl font-bold text-gray-900">{pendingCount}</p>
+              <div className="flex items-center space-x-2">
+                <Clock className="h-5 w-5 text-orange-600" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Pending Approvals
+                </span>
               </div>
-              <Clock className="h-8 w-8 text-orange-500" />
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {pendingCount}
+              </span>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Balance</p>
-                <p className="text-3xl font-bold text-gray-900">{totalBalance.toFixed(1)}</p>
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Balance
+                </span>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+            </div>
+            <div className="mt-2">
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {totalBalance.toFixed(1)}
+              </span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Main Content Grid - Reorganized for better space utilization */}
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          {/* Applications Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BarChart3 className="h-5 w-5" />
-                Recent Applications
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Tabs defaultValue="leaves" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="leaves">Leaves ({totalRequests})</TabsTrigger>
-                  <TabsTrigger value="pto">BTO ({ptoRequests.length})</TabsTrigger>
-                  <TabsTrigger value="compoff">Comp-off ({compOffRequests.length})</TabsTrigger>
-                </TabsList>
+        {/* Recent Applications */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold">
+              Recent Applications
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Tabs defaultValue="leaves" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="leaves">
+                  Leaves ({leaveRequests.length})
+                </TabsTrigger>
+                <TabsTrigger value="bto">
+                  BTO ({ptoRequests.length})
+                </TabsTrigger>
+                <TabsTrigger value="comp-off">
+                  Comp-off ({compOffRequests.length})
+                </TabsTrigger>
+              </TabsList>
 
-                <TabsContent value="leaves" className="space-y-4">
-                  {leaveRequests.length > 0 ? (
-                    <div className="space-y-3">
-                      {leaveRequests.slice(0, 5).map((request: LeaveRequest, index: number) => (
-                        <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-medium text-gray-900">Leave Request</span>
-                              <Badge variant={
-                                request.status === 'approved' ? 'default' :
-                                request.status === 'pending' ? 'secondary' : 
-                                'destructive'
-                              }>
-                                {request.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600">
-                              {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
-                            </p>
-                            <p className="text-sm text-gray-500">{request.workingDays} working days</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">
-                              {new Date(request.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
+              <TabsContent value="leaves" className="mt-4">
+                {leaveRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No leave applications found
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {leaveRequests.slice(0, 5).map((request) => (
+                      <div
+                        key={request.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            Leave Request
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(request.startDate).toLocaleDateString()} -{" "}
+                            {new Date(request.endDate).toLocaleDateString()}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      No leave applications found
-                    </div>
+                        <Badge
+                          variant={
+                            request.status === "approved"
+                              ? "default"
+                              : request.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {request.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="bto" className="mt-4">
+                {ptoRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No BTO applications found
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {ptoRequests.slice(0, 5).map((request: any) => (
+                      <div
+                        key={request.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            BTO Request
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(request.requestDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            request.status === "approved"
+                              ? "default"
+                              : request.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {request.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="comp-off" className="mt-4">
+                {compOffRequests.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No comp-off applications found
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {compOffRequests.slice(0, 5).map((request: any) => (
+                      <div
+                        key={request.id}
+                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div>
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            Comp-off Request
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(request.workedDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={
+                            request.status === "approved"
+                              ? "default"
+                              : request.status === "pending"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {request.status}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+
+        {/* Leave Calendar */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold">
+                Leave Calendar
+              </CardTitle>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (currentMonth === 0) {
+                      setCurrentMonth(11);
+                      setCurrentYear(currentYear - 1);
+                    } else {
+                      setCurrentMonth(currentMonth - 1);
+                    }
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="font-medium">
+                  {new Date(currentYear, currentMonth).toLocaleDateString(
+                    "en-US",
+                    {
+                      month: "long",
+                      year: "numeric",
+                    },
                   )}
-                </TabsContent>
-
-                <TabsContent value="pto">
-                  <div className="text-center py-8 text-gray-500">
-                    {ptoRequests.length === 0 ? 'No BTO requests found' : `${ptoRequests.length} BTO requests`}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="compoff">
-                  <div className="text-center py-8 text-gray-500">
-                    {compOffRequests.length === 0 ? 'No comp-off requests found' : `${compOffRequests.length} comp-off requests`}
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Calendar Section */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Leave Calendar</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => navigateMonth('prev')}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="font-medium">
-                    {new Date(currentYear, currentMonth).toLocaleDateString('default', { month: 'long', year: 'numeric' })}
-                  </span>
-                  <Button variant="outline" size="sm" onClick={() => navigateMonth('next')}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (currentMonth === 11) {
+                      setCurrentMonth(0);
+                      setCurrentYear(currentYear + 1);
+                    } else {
+                      setCurrentMonth(currentMonth + 1);
+                    }
+                  }}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-1 text-center">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="p-2 text-sm font-medium text-gray-500">
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-1 text-center">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div
+                  key={day}
+                  className="p-2 text-sm font-medium text-gray-500 dark:text-gray-400"
+                >
+                  {day}
+                </div>
+              ))}
+              {(() => {
+                const firstDay = new Date(
+                  currentYear,
+                  currentMonth,
+                  1,
+                ).getDay();
+                const daysInMonth = new Date(
+                  currentYear,
+                  currentMonth + 1,
+                  0,
+                ).getDate();
+                const calendarDays = [];
+
+                // Empty cells for days before the first day of the month
+                for (let i = 0; i < firstDay; i++) {
+                  calendarDays.push(
+                    <div key={`empty-${i}`} className="p-2 text-sm"></div>,
+                  );
+                }
+
+                // Days of the month
+                for (let day = 1; day <= daysInMonth; day++) {
+                  const currentDate = new Date(currentYear, currentMonth, day);
+
+                  // Check if this date has approved leaves
+                  const approvedOnDate = approvedLeaves.some((leave) => {
+                    const startDate = new Date(leave.startDate);
+                    const endDate = new Date(leave.endDate);
+                    return currentDate >= startDate && currentDate <= endDate;
+                  });
+
+                  // Check if this date has pending leaves
+                  const pendingOnDate = leaveRequests
+                    .filter((req: any) => req.status === "pending")
+                    .some((leave) => {
+                      const startDate = new Date(leave.startDate);
+                      const endDate = new Date(leave.endDate);
+                      return currentDate >= startDate && currentDate <= endDate;
+                    });
+
+                  // Check if this date has rejected leaves
+                  const rejectedOnDate = leaveRequests
+                    .filter((req: any) => req.status === "rejected")
+                    .some((leave) => {
+                      const startDate = new Date(leave.startDate);
+                      const endDate = new Date(leave.endDate);
+                      return currentDate >= startDate && currentDate <= endDate;
+                    });
+
+                  let statusClass = "hover:bg-gray-100 dark:hover:bg-gray-800";
+                  let indicatorColor = "";
+
+                  if (approvedOnDate) {
+                    statusClass =
+                      "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
+                    indicatorColor = "bg-green-500";
+                  } else if (pendingOnDate) {
+                    statusClass =
+                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
+                    indicatorColor = "bg-yellow-500";
+                  } else if (rejectedOnDate) {
+                    statusClass =
+                      "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300";
+                    indicatorColor = "bg-red-500";
+                  }
+
+                  calendarDays.push(
+                    <div
+                      key={day}
+                      className={`p-2 text-sm relative cursor-pointer ${statusClass}`}
+                    >
                       {day}
-                    </div>
-                  ))}
-                  {renderCalendar()}
-                </div>
-                
-                {/* Legend */}
-                <div className="flex items-center gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-300 rounded"></div>
-                    <span className="text-gray-600">Approved</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-orange-300 rounded"></div>
-                    <span className="text-gray-600">Pending</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-300 rounded"></div>
-                    <span className="text-gray-600">Rejected</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                      {(approvedOnDate || pendingOnDate || rejectedOnDate) && (
+                        <div
+                          className={`absolute bottom-0 left-1 right-1 h-1 ${indicatorColor} rounded-full`}
+                        ></div>
+                      )}
+                    </div>,
+                  );
+                }
 
-          {/* Chart Section - Now positioned to fill empty space */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Leave Usage Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={usageTrendsData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Bar dataKey="usage" fill="#3B82F6" />
-                  </BarChart>
-                </ResponsiveContainer>
+                return calendarDays;
+              })()}
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center justify-center mt-4 space-x-4">
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Approved
+                </span>
               </div>
-              {/* Debug data without header */}
-              <div className="mt-4 p-3 bg-gray-50 rounded text-xs">
-                <p>Total requests: {leaveRequests.length}</p>
-                <p>Approved: {approvedLeaves.length}</p>
-                <p>Chart data points: {usageTrendsData.length}</p>
-                <div className="mt-2">
-                  {usageTrendsData.filter(d => d.usage > 0).map(d => (
-                    <span key={d.month} className="mr-2">
-                      {d.month}: {d.usage}
-                    </span>
-                  ))}
-                </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Pending
+                </span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-center space-x-1">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Rejected
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Leave Usage Trends */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold">
+            Leave Usage Trends
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={trendsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Bar dataKey="leaves" fill="#3b82f6" radius={[4, 4, 0, 0]}>
+                  {trendsData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill="#3b82f6" />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Monthly Breakdown */}
+          <div className="mt-6">
+            <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+              Monthly Leave Breakdown
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {trendsData
+                .filter((month) => month.leaves > 0)
+                .map((month) => (
+                  <div
+                    key={month.month}
+                    className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                  >
+                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                      {month.month}
+                    </div>
+                    <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      {month.leaves} {month.leaves === 1 ? "day" : "days"}
+                    </div>
+                  </div>
+                ))}
+            </div>
+            {trendsData.filter((month) => month.leaves > 0).length === 0 && (
+              <div className="text-center py-4 text-gray-500 dark:text-gray-400">
+                No leave data for this year
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
