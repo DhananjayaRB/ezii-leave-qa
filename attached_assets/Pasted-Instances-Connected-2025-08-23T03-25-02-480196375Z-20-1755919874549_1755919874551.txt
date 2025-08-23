@@ -1,0 +1,263 @@
+Instances
+Connected!
+2025-08-23T03:25:02.480196375Z     _____                               
+
+2025-08-23T03:25:02.480239948Z    /  _  \ __________ _________   ____  
+
+2025-08-23T03:25:02.480243011Z   /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+
+2025-08-23T03:25:02.480245142Z  /    |    \/    /|  |  /|  | \/\  ___/ 
+
+2025-08-23T03:25:02.480247135Z  \____|__  /_____ \____/ |__|    \___  >
+
+2025-08-23T03:25:02.480249422Z          \/      \/                  \/ 
+
+2025-08-23T03:25:02.480251572Z  A P P   S E R V I C E   O N   L I N U X
+
+2025-08-23T03:25:02.480253503Z
+2025-08-23T03:25:02.480255171Z  Documentation: http://aka.ms/webapp-linux
+
+2025-08-23T03:25:02.480256995Z  NodeJS quickstart: https://aka.ms/node-qs
+
+2025-08-23T03:25:02.480258884Z  NodeJS Version : v20.19.3
+
+2025-08-23T03:25:02.480260719Z  Note: Any data outside '/home' is not persisted
+
+2025-08-23T03:25:02.480262612Z
+2025-08-23T03:25:05.599386674Z  Starting OpenBSD Secure Shell server: sshd.
+
+2025-08-23T03:25:05.608362359Z  WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+
+2025-08-23T03:25:05.614818585Z  Updating certificates in /etc/ssl/certs...
+
+2025-08-23T03:25:08.221642760Z  rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2025-08-23T03:25:08.235315180Z  4 added, 0 removed; done.
+
+2025-08-23T03:25:08.235340563Z  Running hooks in /etc/ca-certificates/update.d...
+oes not contain exactly one certificate or CRL
+2025-08-23T03:25:08.241990579Z  done.
+d, 0 removed; done.
+
+2025-08-23T03:25:08.245132305Z  CA certificates copied and updated successfully.
+
+oes not contain exactly one certificate or CRL
+2025-08-23T03:25:08.291755991Z  Starting periodic command scheduler: cron.
+
+
+2025-08-23T03:25:08.300947080Z  Could not find build manifest file at '/home/site/wwwroot/oryx-manifest.toml'
+certificate or CRL
+2025-08-23T03:25:08.300975528Z  Could not find operation ID in manifest. Generating an operation id...
+.toml'
+certificate or CRL
+2025-08-23T03:25:08.300979449Z  Build Operation ID: ded30ab6-3e86-4ecb-8814-0235ea7c0859
+eration id...
+.toml'
+certificate or CRL
+2025-08-23T03:25:08.443442937Z  Environment Variables for Application Insight's IPA Codeless Configuration exists..
+
+2025-08-23T03:25:08.461963707Z  Writing output script to '/opt/startup/startup.sh'
+ Codeless Configuration exists..
+
+2025-08-23T03:25:08.484405317Z  Running #!/bin/sh
+
+2025-08-23T03:25:08.484448008Z
+2025-08-23T03:25:08.484451634Z  # Enter the source directory to make sure the script runs where the user expects
+..
+
+2025-08-23T03:25:08.484454531Z  cd "/home/site/wwwroot"
+
+2025-08-23T03:25:08.484457862Z
+2025-08-23T03:25:08.484460325Z  export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+s where the user expects
+..
+
+2025-08-23T03:25:08.484463361Z  if [ -z "$PORT" ]; then
+
+2025-08-23T03:25:08.484466353Z  		export PORT=8080
+then
+
+2025-08-23T03:25:08.484469178Z  fi
+
+2025-08-23T03:25:08.484471509Z
+2025-08-23T03:25:08.484473851Z  PATH="$PATH:/home/site/wwwroot" npm start
+
+
+2025-08-23T03:25:09.602972747Z  npm info using npm@10.9.2
+
+2025-08-23T03:25:09.603197021Z  npm info using node@v20.19.3
+
+2025-08-23T03:25:10.258505289Z
+2025-08-23T03:25:10.258531554Z  > rest-express@1.0.0 start
+3
+
+2025-08-23T03:25:10.258535363Z  > cross-env NODE_ENV=production node dist/index.js
+
+2025-08-23T03:25:10.258537591Z
+2025-08-23T03:25:10.294493046Z  sh: 1: cross-env: Permission denied
+ dist/index.js
+
+2025-08-23T03:30:10.337877805Z     _____                               
+
+2025-08-23T03:30:10.337914997Z    /  _  \ __________ _________   ____  
+
+2025-08-23T03:30:10.337917979Z   /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+
+2025-08-23T03:30:10.337920216Z  /    |    \/    /|  |  /|  | \/\  ___/ 
+
+2025-08-23T03:30:10.337922152Z  \____|__  /_____ \____/ |__|    \___  >
+
+2025-08-23T03:30:10.337924540Z          \/      \/                  \/ 
+
+2025-08-23T03:30:10.337926264Z  A P P   S E R V I C E   O N   L I N U X
+
+2025-08-23T03:30:10.337928106Z
+2025-08-23T03:30:10.337929660Z  Documentation: http://aka.ms/webapp-linux
+
+2025-08-23T03:30:10.337931238Z  NodeJS quickstart: https://aka.ms/node-qs
+
+2025-08-23T03:30:10.337932823Z  NodeJS Version : v20.19.3
+
+2025-08-23T03:30:10.337934487Z  Note: Any data outside '/home' is not persisted
+
+2025-08-23T03:30:10.337936156Z
+2025-08-23T03:30:12.267016557Z  Starting OpenBSD Secure Shell server: sshd.
+
+2025-08-23T03:30:12.269951991Z  WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+
+2025-08-23T03:30:12.277071718Z  Updating certificates in /etc/ssl/certs...
+true.
+
+2025-08-23T03:30:14.922716228Z  rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2025-08-23T03:30:14.942955796Z  4 added, 0 removed; done.
+
+2025-08-23T03:30:14.942980620Z  Running hooks in /etc/ca-certificates/update.d...
+oes not contain exactly one certificate or CRL
+2025-08-23T03:30:14.944470576Z  done.
+d, 0 removed; done.
+
+2025-08-23T03:30:14.953156880Z  CA certificates copied and updated successfully.
+
+2025-08-23T03:30:14.994376615Z  Starting periodic command scheduler: cron.
+ully.
+
+2025-08-23T03:30:15.004389543Z  Could not find build manifest file at '/home/site/wwwroot/oryx-manifest.toml'
+
+2025-08-23T03:30:15.004414553Z  Could not find operation ID in manifest. Generating an operation id...
+.toml'
+
+2025-08-23T03:30:15.004418311Z  Build Operation ID: a5dfd0ae-f2e6-4d85-a770-ca51d1464757
+eration id...
+.toml'
+
+2025-08-23T03:30:15.122534605Z  Environment Variables for Application Insight's IPA Codeless Configuration exists..
+
+2025-08-23T03:30:15.139423159Z  Writing output script to '/opt/startup/startup.sh'
+ Codeless Configuration exists..
+
+2025-08-23T03:30:15.160800319Z  Running #!/bin/sh
+20.19.3
+
+2025-08-23T03:30:15.160822331Z
+2025-08-23T03:30:15.160825605Z  # Enter the source directory to make sure the script runs where the user expects
+..
+
+2025-08-23T03:30:15.160828570Z  cd "/home/site/wwwroot"
+3
+
+2025-08-23T03:30:15.160831567Z
+2025-08-23T03:30:15.160834118Z  export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+s where the user expects
+..
+
+2025-08-23T03:30:15.160836692Z  if [ -z "$PORT" ]; then
+3
+
+2025-08-23T03:30:15.160840023Z  		export PORT=8080
+then
+3
+
+2025-08-23T03:30:15.160843006Z  fi
+xport PORT=8080
+then
+3
+
+2025-08-23T03:30:15.160845391Z
+2025-08-23T03:30:15.160847771Z  PATH="$PATH:/home/site/wwwroot" npm start
+es:$NODE_PATH
+s where the user expects
+..
+
+2025-08-23T03:30:16.321920197Z  npm info using npm@10.9.2
+
+2025-08-23T03:30:16.321953569Z  npm info using node@v20.19.3
+
+2025-08-23T03:30:16.969504378Z
+2025-08-23T03:30:16.969542044Z  > rest-express@1.0.0 start
+
+2025-08-23T03:30:16.969545408Z  > node dist/server/index.js
+
+2025-08-23T03:30:16.969547489Z
+2025-08-23T03:30:17.897638091Z  node:internal/modules/cjs/loader:1215
+art
+es:$NODE_PATH
+s where the user expects
+..
+
+2025-08-23T03:30:17.897663564Z    throw err;
+g node@v20.19.3
+
+2025-08-23T03:30:17.897666316Z    ^
+row err;
+g node@v20.19.3
+
+2025-08-23T03:30:17.897668269Z
+2025-08-23T03:30:17.897670382Z  Error: Cannot find module '/home/site/wwwroot/dist/server/index.js'
+user expects
+..
+
+2025-08-23T03:30:17.897672336Z      at Module._resolveFilename (node:internal/modules/cjs/loader:1212:15)
+xpects
+..
+
+2025-08-23T03:30:17.897674356Z      at Module._load (node:internal/modules/cjs/loader:1043:27)
+r:1212:15)
+xpects
+..
+
+2025-08-23T03:30:17.897676878Z      at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+
+2025-08-23T03:30:17.897678830Z      at node:internal/main/run_main_module:28:49 {
+ (node:internal/modules/run_main:164:12)
+
+2025-08-23T03:30:17.897680719Z    code: 'MODULE_NOT_FOUND',
+
+
+2025-08-23T03:30:17.897682520Z    requireStack: []
+_FOUND',
+
+
+2025-08-23T03:30:17.897684315Z  }
+requireStack: []
+_FOUND',
+
+
+2025-08-23T03:30:17.897686526Z
+2025-08-23T03:30:17.897688270Z  Node.js v20.19.3
+]
+_FOUND',
+
+
+2025-08-23T03:30:17.912329385Z  npm http fetch GET 200 https://registry.npmjs.org/npm 622ms
+ntain exactly one certificate or CRL
+2025-08-23T03:30:17.919734235Z  npm notice
+ess@1.0.0 start
+
+2025-08-23T03:30:17.919755429Z  npm notice New major version of npm available! 10.9.2 -> 11.5.2
+n exactly one certificate or CRL
+2025-08-23T03:30:17.919759271Z  npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+tly one certificate or CRL
+2025-08-23T03:30:17.919761528Z  npm notice To update run: npm install -g npm@11.5.2
+eases/tag/v11.5.2
+tly one certificate or CRL
+2025-08-23T03:30:17.919763478Z  npm notice
+ess@1.0.0 start
