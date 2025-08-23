@@ -1,12 +1,12 @@
-const { createServer } = require("http");
-const { neon } = require("@neondatabase/serverless");
-const { drizzle } = require("drizzle-orm/neon-http");
-const { desc, eq, and, sql, inArray } = require("drizzle-orm");
-const schema = require("../shared/schema");
-const jwt = require("jsonwebtoken");
-const multer = require("multer");
-const XLSX = require("xlsx");
-const dotenv = require("dotenv");
+import { createServer } from "http";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { desc, eq, and, sql, inArray } from "drizzle-orm";
+import * as schema from "../shared/schema.js";
+import jwt from "jsonwebtoken";
+import multer from "multer";
+import XLSX from "xlsx";
+import dotenv from "dotenv";
 
 import type { Express } from "express";
 
@@ -115,7 +115,7 @@ const {
   insertLeaveBalanceTransactionSchema,
 } = schema;
 
-async function registerRoutes(app) {
+export async function registerRoutes(app: Express) {
   // Auth middleware
   await setupAuth(app);
 

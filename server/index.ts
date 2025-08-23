@@ -1,8 +1,19 @@
-const express = require("express");
-const { registerRoutes } = require("./routes");
-const { setupVite, serveStatic, log } = require("./vite");
+import express from "express";
+import cors from "cors";
+import { neon } from "@neondatabase/serverless";
+import { drizzle } from "drizzle-orm/neon-http";
+import { desc, eq, and, sql, inArray } from "drizzle-orm";
+import * as schema from "../shared/schema.js";
+import jwt from "jsonwebtoken";
+import multer from "multer";
+import XLSX from "xlsx";
+import dotenv from "dotenv";
 
-import type { Request, Response, NextFunction } from "express";
+import type { Express } from "express";
+import { DatabaseStorage } from "./storage.js";
+import { registerRoutes } from "./routes.js";
+
+import { setupAuth, isAuthenticated } from "./replitAuth.js";
 
 const app = express();
 app.use(express.json());

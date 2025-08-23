@@ -1,7 +1,7 @@
 // FORCE CONNECTION TO EXTERNAL PRODUCTION DATABASE
 import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import * as schema from "../shared/schema";
+import * as schema from "../shared/schema.js";
 
 // COMPLETELY OVERRIDE ANY ENVIRONMENT VARIABLES
 const FORCED_EXTERNAL_URL = "postgres://postgres:resolve%402022@20.204.119.48:5432/ezii-leave";

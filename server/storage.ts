@@ -72,7 +72,7 @@ import {
   type BlackoutPeriod,
   type InsertBlackoutPeriod,
 } from "../shared/schema";
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq, desc, and, or, sql, isNotNull, like, inArray } from "drizzle-orm";
 
 export interface IStorage {
