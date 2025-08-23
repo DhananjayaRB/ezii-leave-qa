@@ -1,0 +1,82 @@
+Instances
+Connected!
+2025-08-23T03:41:45.998483345Z  rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2025-08-23T03:41:47.635798078Z  npm info using npm@10.9.2
+
+2025-08-23T03:41:47.635863322Z  npm info using node@v20.19.3
+
+2025-08-23T03:46:47.451941567Z  rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2025-08-23T03:46:48.864582587Z  npm info using npm@10.9.2
+
+2025-08-23T03:46:48.864621257Z  npm info using node@v20.19.3
+
+2025-08-23T03:46:50.608719096Z  node:internal/modules/esm/resolve:873
+art
+es:$NODE_PATH
+s where the user expects
+tificate or CRL
+2025-08-23T03:46:50.608745974Z    throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+ exists..
+
+2025-08-23T03:46:50.608748688Z          ^
+
+2025-08-23T03:46:50.608750398Z
+2025-08-23T03:46:50.608751992Z  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'drizzle-orm' imported from /home/site/wwwroot/dist/index.js
+OwnerEndpointSelectorAsync, lastError: 
+
+2025-08-23T03:46:50.608753981Z      at packageResolve (node:internal/modules/esm/resolve:873:9)
+ites.conf successful
+.','',LWAS,
+2025-08-23T03:46:50.608756099Z      at moduleResolve (node:internal/modules/esm/resolve:946:18)
+ites.conf successful
+.','',LWAS,
+2025-08-23T03:46:50.608757922Z      at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+e user expects
+tificate or CRL
+2025-08-23T03:46:50.608759723Z      at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+
+2025-08-23T03:46:50.608761350Z      at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+2:12)
+
+2025-08-23T03:46:50.608763112Z      at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+
+2:12)
+
+2025-08-23T03:46:50.608764727Z      at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+
+2025-08-23T03:46:50.608766368Z      at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+nf successful
+.','',LWAS,
+2025-08-23T03:46:50.608768009Z    code: 'ERR_MODULE_NOT_FOUND'
+
+2025-08-23T03:46:50.608769673Z  }
+code: 'ERR_MODULE_NOT_FOUND'
+
+2025-08-23T03:46:50.608771177Z
+2025-08-23T03:46:50.608772825Z  Node.js v20.19.3
+LE_NOT_FOUND'
+
+2025-08-23T03:46:50.626629767Z  npm http fetch GET 200 https://registry.npmjs.org/npm 178ms
+:130:49) {
+nf successful
+.','',LWAS,
+2025-08-23T03:46:50.631687402Z  npm notice
+RT=8080
+then
+.
+
+2025-08-23T03:46:50.631700539Z  npm notice New major version of npm available! 10.9.2 -> 11.5.2
+)
+e user expects
+tificate or CRL
+2025-08-23T03:46:50.631703482Z  npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+er expects
+tificate or CRL
+2025-08-23T03:46:50.631705568Z  npm notice To update run: npm install -g npm@11.5.2
+eases/tag/v11.5.2
+er expects
+tificate or CRL
+2025-08-23T03:46:50.631707589Z  npm notice
+RT=8080
+then
+.
