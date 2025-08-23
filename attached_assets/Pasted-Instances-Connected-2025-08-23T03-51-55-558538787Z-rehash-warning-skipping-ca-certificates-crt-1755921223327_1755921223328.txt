@@ -1,0 +1,75 @@
+Instances
+Connected!
+2025-08-23T03:51:55.558538787Z  rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2025-08-23T03:51:56.983159311Z  npm info using npm@10.9.2
+
+2025-08-23T03:51:56.983375534Z  npm info using node@v20.19.3
+
+2025-08-23T03:51:58.636807800Z  node:internal/modules/esm/resolve:873
+art
+es:$NODE_PATH
+t contain exactly one certificate or CRL
+2025-08-23T03:51:58.636841113Z    throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+
+2025-08-23T03:51:58.636844639Z          ^
+site/wwwroot"
+
+2025-08-23T03:51:58.636846675Z
+2025-08-23T03:51:58.636848654Z  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'drizzle-orm' imported from /home/site/wwwroot/dist/index.js
+
+2025-08-23T03:51:58.636850730Z      at packageResolve (node:internal/modules/esm/resolve:873:9)
+n exactly one certificate or CRL
+2025-08-23T03:51:58.636852816Z      at moduleResolve (node:internal/modules/esm/resolve:946:18)
+n exactly one certificate or CRL
+2025-08-23T03:51:58.636854915Z      at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+e user expects
+..
+
+2025-08-23T03:51:58.636856723Z      at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+ certificate or CRL
+2025-08-23T03:51:58.636858552Z      at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+r expects
+..
+
+2025-08-23T03:51:58.636860505Z      at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+42:12)
+ certificate or CRL
+2025-08-23T03:51:58.636862393Z      at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+
+2025-08-23T03:51:58.636864256Z      at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+ader:236:38)
+
+2025-08-23T03:51:58.636866509Z    code: 'ERR_MODULE_NOT_FOUND'
+
+2025-08-23T03:51:58.636868395Z  }
+      ^
+site/wwwroot"
+
+2025-08-23T03:51:58.636870205Z
+2025-08-23T03:51:58.636872026Z  Node.js v20.19.3
+wroot"
+
+2025-08-23T03:51:58.655900318Z  npm http fetch GET 200 https://registry.npmjs.org/npm 213ms
+:130:49) {
+ader:236:38)
+
+2025-08-23T03:51:58.662308955Z  npm notice
+.19.3
+wroot"
+
+2025-08-23T03:51:58.662323285Z  npm notice New major version of npm available! 10.9.2 -> 11.5.2
+:49) {
+ader:236:38)
+
+2025-08-23T03:51:58.662326217Z  npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+
+ader:236:38)
+
+2025-08-23T03:51:58.662328461Z  npm notice To update run: npm install -g npm@11.5.2
+eases/tag/v11.5.2
+
+ader:236:38)
+
+2025-08-23T03:51:58.662330451Z  npm notice
+.19.3
+wroot"
