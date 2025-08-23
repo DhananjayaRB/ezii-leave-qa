@@ -1,0 +1,189 @@
+Instances
+Connected!
+2025-08-23T03:34:38.050184575Z     _____                               
+
+2025-08-23T03:34:38.050240148Z    /  _  \ __________ _________   ____  
+
+2025-08-23T03:34:38.050243796Z   /  /_\  \\___   /  |  \_  __ \_/ __ \ 
+
+2025-08-23T03:34:38.050246117Z  /    |    \/    /|  |  /|  | \/\  ___/ 
+
+2025-08-23T03:34:38.050248115Z  \____|__  /_____ \____/ |__|    \___  >
+
+2025-08-23T03:34:38.050250598Z          \/      \/                  \/ 
+
+2025-08-23T03:34:38.050252699Z  A P P   S E R V I C E   O N   L I N U X
+
+2025-08-23T03:34:38.050254698Z
+2025-08-23T03:34:38.050256446Z  Documentation: http://aka.ms/webapp-linux
+
+2025-08-23T03:34:38.050258332Z  NodeJS quickstart: https://aka.ms/node-qs
+
+2025-08-23T03:34:38.050260162Z  NodeJS Version : v20.19.3
+
+2025-08-23T03:34:38.050262012Z  Note: Any data outside '/home' is not persisted
+
+2025-08-23T03:34:38.050263868Z
+2025-08-23T03:34:40.792551841Z  Starting OpenBSD Secure Shell server: sshd.
+rWatcher: Restarting site
+
+2025-08-23T03:34:40.799241137Z  WEBSITES_INCLUDE_CLOUD_CERTS is not set to true.
+her: Restarting site
+
+2025-08-23T03:34:40.806302557Z  Updating certificates in /etc/ssl/certs...
+true.
+her: Restarting site
+
+2025-08-23T03:34:43.470618414Z  rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+2025-08-23T03:34:43.484603138Z  4 added, 0 removed; done.
+
+2025-08-23T03:34:43.484629033Z  Running hooks in /etc/ca-certificates/update.d...
+oes not contain exactly one certificate or CRL
+2025-08-23T03:34:43.491549616Z  done.
+d, 0 removed; done.
+
+2025-08-23T03:34:43.499088605Z  CA certificates copied and updated successfully.
+
+oes not contain exactly one certificate or CRL
+2025-08-23T03:34:43.546019317Z  Starting periodic command scheduler: cron.
+
+2025-08-23T03:34:43.556094212Z  Could not find build manifest file at '/home/site/wwwroot/oryx-manifest.toml'
+
+2025-08-23T03:34:43.556114885Z  Could not find operation ID in manifest. Generating an operation id...
+.toml'
+
+2025-08-23T03:34:43.556118735Z  Build Operation ID: 19a51c19-3b99-40bd-9581-f08c35b73a16
+eration id...
+.toml'
+
+2025-08-23T03:34:43.696906562Z  Environment Variables for Application Insight's IPA Codeless Configuration exists..
+icate or CRL
+2025-08-23T03:34:43.715156086Z  Writing output script to '/opt/startup/startup.sh'
+ Codeless Configuration exists..
+icate or CRL
+2025-08-23T03:34:43.736673330Z  Running #!/bin/sh
+; done.
+
+2025-08-23T03:34:43.736699841Z
+2025-08-23T03:34:43.736703592Z  # Enter the source directory to make sure the script runs where the user expects
+..
+icate or CRL
+2025-08-23T03:34:43.736706529Z  cd "/home/site/wwwroot"
+.
+
+2025-08-23T03:34:43.736709663Z
+2025-08-23T03:34:43.736712397Z  export NODE_PATH=/usr/local/lib/node_modules:$NODE_PATH
+s where the user expects
+..
+icate or CRL
+2025-08-23T03:34:43.736715105Z  if [ -z "$PORT" ]; then
+.
+
+2025-08-23T03:34:43.736717789Z  		export PORT=8080
+then
+.
+
+2025-08-23T03:34:43.736720836Z  fi
+xport PORT=8080
+then
+.
+
+2025-08-23T03:34:43.736723662Z
+2025-08-23T03:34:43.736726076Z  PATH="$PATH:/home/site/wwwroot" npm start
+es:$NODE_PATH
+s where the user expects
+..
+icate or CRL
+2025-08-23T03:34:44.913668797Z  npm info using npm@10.9.2
+
+2025-08-23T03:34:44.913695718Z  npm info using node@v20.19.3
+
+2025-08-23T03:34:45.580149889Z
+2025-08-23T03:34:45.580174892Z  > rest-express@1.0.0 start
+
+2025-08-23T03:34:45.580178007Z  > NODE_ENV=production node dist/index.js
+81-f08c35b73a16
+eration id...
+.toml'
+
+2025-08-23T03:34:45.580180096Z
+2025-08-23T03:34:46.592688391Z  node:internal/modules/esm/resolve:873
+js
+81-f08c35b73a16
+eration id...
+.toml'
+
+2025-08-23T03:34:46.592714661Z    throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+ml'
+
+2025-08-23T03:34:46.592717881Z          ^
+ress@1.0.0 start
+
+2025-08-23T03:34:46.592719936Z
+2025-08-23T03:34:46.592721803Z  Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'drizzle-orm' imported from /home/site/wwwroot/dist/index.js
+ /var/LWASFiles/kuduagent/eziileave: Elapsed time for Task.WhenAny(): 1 ms
+nAny(): 1 ms
+
+2025-08-23T03:34:46.592723794Z      at packageResolve (node:internal/modules/esm/resolve:873:9)
+), null);
+ml'
+
+2025-08-23T03:34:46.592725770Z      at moduleResolve (node:internal/modules/esm/resolve:946:18)
+), null);
+ml'
+
+2025-08-23T03:34:46.592727765Z      at defaultResolve (node:internal/modules/esm/resolve:1188:11)
+ null);
+ml'
+
+2025-08-23T03:34:46.592729603Z      at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:642:12)
+
+
+2025-08-23T03:34:46.592731567Z      at #cachedDefaultResolve (node:internal/modules/esm/loader:591:25)
+2:12)
+
+
+2025-08-23T03:34:46.592733439Z      at ModuleLoader.resolve (node:internal/modules/esm/loader:574:38)
+er expects
+..
+icate or CRL
+2025-08-23T03:34:46.592735270Z      at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:236:38)
+icate or CRL
+2025-08-23T03:34:46.592737280Z      at ModuleJob._link (node:internal/modules/esm/module_job:130:49) {
+ader:236:38)
+icate or CRL
+2025-08-23T03:34:46.592739230Z    code: 'ERR_MODULE_NOT_FOUND'
+
+2025-08-23T03:34:46.592741042Z  }
+code: 'ERR_MODULE_NOT_FOUND'
+
+2025-08-23T03:34:46.592742824Z
+2025-08-23T03:34:46.592744568Z  Node.js v20.19.3
+LE_NOT_FOUND'
+
+2025-08-23T03:34:46.611937479Z  npm http fetch GET 200 https://registry.npmjs.org/npm 190ms
+er:591:25)
+2:12)
+
+
+2025-08-23T03:34:46.622850771Z  npm notice
+ess@1.0.0 start
+
+2025-08-23T03:34:46.622876902Z  npm notice New major version of npm available! 10.9.2 -> 11.5.2
+91:25)
+2:12)
+
+
+2025-08-23T03:34:46.622880325Z  npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.5.2
+
+2:12)
+
+
+2025-08-23T03:34:46.622882814Z  npm notice To update run: npm install -g npm@11.5.2
+eases/tag/v11.5.2
+
+2:12)
+
+
+2025-08-23T03:34:46.622885373Z  npm notice
+ess@1.0.0 start
