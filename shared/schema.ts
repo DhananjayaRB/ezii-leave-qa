@@ -1,20 +1,6 @@
-import {
-  pgTable,
-  text,
-  varchar,
-  timestamp,
-  jsonb,
-  index,
-  serial,
-  integer,
-  boolean,
-  pgEnum,
-  date,
-  unique,
-  numeric,
-} from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
+const { pgTable, text, integer, timestamp, boolean, jsonb, serial, varchar, date, decimal } = require("drizzle-orm/pg-core");
+const { createInsertSchema, createSelectSchema } = require("drizzle-zod");
+const { z } = require("zod");
 
 // Session storage table for Replit Auth
 export const sessions = pgTable(
@@ -249,7 +235,7 @@ export const compOffVariants = pgTable("comp_off_variants", {
   name: varchar("name").notNull(),
   description: text("description"),
   enabled: boolean("enabled").default(true),
-  
+
   // Comp-off units configuration
   allowFullDay: boolean("allow_full_day").default(false),
   fullDayHours: numeric("full_day_hours", { precision: 4, scale: 2 }).default("0"),
@@ -257,36 +243,36 @@ export const compOffVariants = pgTable("comp_off_variants", {
   halfDayHours: numeric("half_day_hours", { precision: 4, scale: 2 }).default("0"),
   allowQuarterDay: boolean("allow_quarter_day").default(false),
   quarterDayHours: numeric("quarter_day_hours", { precision: 4, scale: 2 }).default("0"),
-  
+
   // Eligibility criteria
   maxApplications: integer("max_applications").default(1),
   maxApplicationsPeriod: varchar("max_applications_period").default("Month"),
-  
+
   // Workflow settings
   workflowRequired: boolean("workflow_required").default(false),
   documentsRequired: boolean("documents_required").default(false),
   applicableAfter: integer("applicable_after").default(0), // days
   approvalDays: integer("approval_days").default(0),
   expiryDays: integer("expiry_days").default(365),
-  
+
   // Working days
   allowNonWorkingDays: boolean("allow_non_working_days").default(false),
-  
+
   // Withdrawal settings
   withdrawalBeforeApproval: boolean("withdrawal_before_approval").default(false),
   withdrawalAfterApproval: boolean("withdrawal_after_approval").default(false),
   withdrawalNotAllowed: boolean("withdrawal_not_allowed").default(true),
-  
+
   // Notice period
   allowedDuringNotice: boolean("allowed_during_notice").default(true),
-  
+
   // Carry Forward and Lapse
   enableCarryForward: boolean("enable_carry_forward").default(false),
   carryForwardDays: integer("carry_forward_days").default(0),
   enableLapse: boolean("enable_lapse").default(false),
   lapsePeriod: integer("lapse_period").default(0),
   lapsePeriodUnit: varchar("lapse_period_unit").default("Month"),
-  
+
   // Compensation settings
   enableCompensation: boolean("enable_compensation").default(false),
   encashmentOption: boolean("encashment_option").default(false),
@@ -295,10 +281,10 @@ export const compOffVariants = pgTable("comp_off_variants", {
   maxEncashmentDays: integer("max_encashment_days").default(0),
   maxEncashmentHours: numeric("max_encashment_hours", { precision: 4, scale: 2 }).default("0"),
   convertibleLeaveTypes: jsonb("convertible_leave_types"), // Array of leave type IDs
-  
+
   // Legacy fields for backward compatibility
   maxBalance: integer("max_balance").default(0),
-  
+
   orgId: integer("org_id").default(60),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -741,3 +727,58 @@ export type InsertCollaborativeLeaveAuditLogEnhanced = z.infer<typeof insertColl
 export type CollaborativeLeaveAuditLogEnhanced = typeof collaborativeLeaveAuditLogEnhanced.$inferSelect;
 export type InsertCollaborativeLeaveSettingsEnhanced = z.infer<typeof insertCollaborativeLeaveSettingsEnhancedSchema>;
 export type CollaborativeLeaveSettingsEnhanced = typeof collaborativeLeaveSettingsEnhanced.$inferSelect;
+
+// CommonJS exports
+module.exports = {
+  sessions,
+  userRoleEnum,
+  setupStatusEnum,
+  users,
+  insertUserSchema,
+  companies,
+  insertCompanySchema,
+  leaveTypes,
+  insertLeaveTypeSchema,
+  roles,
+  insertRoleSchema,
+  userRoles,
+  insertUserRoleSchema,
+  workflows,
+  insertWorkflowSchema,
+  compOffConfig,
+  insertCompOffConfigSchema,
+  ptoConfig,
+  insertPTOConfigSchema,
+  leaveRequests,
+  insertLeaveRequestSchema,
+  holidays,
+  insertHolidaySchema,
+  leaveVariants,
+  insertLeaveVariantSchema,
+  compOffVariants,
+  insertCompOffVariantSchema,
+  ptoVariants,
+  insertPTOVariantSchema,
+  ptoRequests,
+  insertPTORequestSchema,
+  compOffRequests,
+  insertCompOffRequestSchema,
+  employeeAssignments,
+  insertEmployeeAssignmentSchema,
+  employeeLeaveBalances,
+  insertEmployeeLeaveBalanceSchema,
+  leaveBalanceTransactions,
+  insertLeaveBalanceTransactionSchema,
+  blackoutPeriods,
+  insertBlackoutPeriodSchema,
+  collaborativeLeaveSettingsEnhanced,
+  insertCollaborativeLeaveSettingsEnhancedSchema,
+  leaveTaskAssigneesEnhanced,
+  insertLeaveTaskAssigneeEnhancedSchema,
+  leaveClosureReportsEnhanced,
+  insertLeaveClosureReportEnhancedSchema,
+  performanceRecordsEnhanced,
+  insertPerformanceRecordEnhancedSchema,
+  collaborativeLeaveAuditLogEnhanced,
+  insertCollaborativeLeaveAuditLogEnhancedSchema
+};

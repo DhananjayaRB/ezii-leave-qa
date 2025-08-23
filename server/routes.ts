@@ -1,20 +1,19 @@
+const { createServer } = require("http");
+const { neon } = require("@neondatabase/serverless");
+const { drizzle } = require("drizzle-orm/neon-http");
+const { desc, eq, and, sql, inArray } = require("drizzle-orm");
+const schema = require("@shared/schema");
+const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const XLSX = require("xlsx");
+const dotenv = require("dotenv");
+
 import type { Express } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { db, pool } from "./db";
-import {
-  leaveRequests,
-  collaborativeLeaveSettingsEnhanced,
-  leaveTaskAssigneesEnhanced,
-  leaveClosureReportsEnhanced,
-} from "@shared/schema";
-import { eq, and, desc, inArray, sql } from "drizzle-orm";
-import { randomBytes } from "crypto";
+import type { User } from "@shared/schema";
 
 // Utility function to extract and validate org_id from headers
-function getOrgIdFromHeaders(req: any): number {
-  const orgIdHeader = req.headers["x-org-id"] as string;
+function getOrgIdFromHeaders(req) {
+  const orgIdHeader = req.headers["x-org-id"];
 
   if (!orgIdHeader) {
     throw new Error("Organization ID is required in X-Org-Id header");
@@ -32,7 +31,7 @@ function getOrgIdFromHeaders(req: any): number {
 }
 
 // Helper function to safely get org_id with error handling
-function safeGetOrgId(req: any, res: any): number | null {
+function safeGetOrgId(req, res) {
   try {
     return getOrgIdFromHeaders(req);
   } catch (error) {
@@ -43,7 +42,7 @@ function safeGetOrgId(req: any, res: any): number | null {
 }
 
 // Helper function to handle comp-off to leave transfer
-async function handleCompOffTransfer(compOffRequest: any, orgId: number) {
+async function handleCompOffTransfer(compOffRequest, orgId) {
   try {
     console.log(
       `Processing comp-off transfer: ${compOffRequest.transferAmount} days to leave type ${compOffRequest.leaveTypeId}`,
@@ -102,9 +101,7 @@ async function handleCompOffTransfer(compOffRequest: any, orgId: number) {
     console.error("Error processing comp-off transfer:", error);
   }
 }
-import multer from "multer";
-import * as XLSX from "xlsx";
-import {
+const {
   insertCompanySchema,
   insertLeaveTypeSchema,
   insertRoleSchema,
@@ -117,9 +114,9 @@ import {
   insertCompOffVariantSchema,
   insertPTOVariantSchema,
   insertLeaveBalanceTransactionSchema,
-} from "@shared/schema";
+} = schema;
 
-export async function registerRoutes(app: Express): Promise<Server> {
+async function registerRoutes(app) {
   // Auth middleware
   await setupAuth(app);
 
@@ -249,7 +246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes with first-login balance calculation
-  app.get("/api/auth/user", isAuthenticated, async (req: any, res) => {
+  app.get("/api/auth/user", isAuthenticated, async (req, res) => {
     try {
       // In development mode, return mock user data
       if (process.env.NODE_ENV === "development") {
@@ -272,7 +269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (e) {
         userId = undefined;
       }
-      const orgId = parseInt(req.headers["x-org-id"] as string) || 60;
+      const orgId = parseInt(req.headers["x-org-id"]) || 60;
       let user = undefined;
       if (userId) {
         user = await storage.getUser(userId);
@@ -311,9 +308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // First-login balance calculation function
   async function calculateBalancesOnFirstLogin(
-    userId: string,
-    orgId: number,
-    req: any,
+    userId,
+    orgId,
+    req,
   ) {
     try {
       const currentYear = new Date().getFullYear();
@@ -324,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
       const assignments = await storage.getEmployeeAssignments(orgId);
       const userAssignments = assignments.filter(
-        (a: any) => a.userId === userId && a.assignmentType === "leave_variant",
+        (a) => a.userId === userId && a.assignmentType === "leave_variant",
       );
 
       // Only calculate if user has assignments but no balances (first login scenario)
@@ -352,7 +349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (response.ok) {
               const data = await response.json();
               employeeData = data.data?.find(
-                (emp: any) => emp.user_id?.toString() === userId?.toString(),
+                (emp) => emp.user_id?.toString() === userId?.toString(),
               );
               console.log(
                 `[FirstLogin] Found employee data for ${userId}: joining date ${employeeData?.date_of_joining}`,
@@ -458,7 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Users routes for admin - fetches from external worker-master-leave API
   app.get("/api/users", isAuthenticated, async (req, res) => {
     try {
-      const orgIdHeader = req.headers["x-org-id"] as string;
+      const orgIdHeader = req.headers["x-org-id"];
       const orgId = getOrgIdFromHeaders(req);
       console.log(
         `[Server] Received X-Org-Id header: "${orgIdHeader}" -> parsed as: ${orgId}`,
@@ -514,14 +511,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get employee assignments to determine assignment status
       const assignments = await storage.getEmployeeAssignments(orgId);
-      const assignedUserIds = new Set(assignments.map((a: any) => a.userId));
+      const assignedUserIds = new Set(assignments.map((a) => a.userId));
       console.log(
         `[Server] Found ${assignedUserIds.size} employees with leave assignments`,
       );
 
       // Transform the API response to match our expected format
       const employees =
-        apiData.data?.data?.map((emp: any) => {
+        apiData.data?.data?.map((emp) => {
           const isAssigned = assignedUserIds.has(emp.user_id);
           return {
             id: emp.employee_number,
@@ -555,7 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Company routes
   app.get("/api/company", isAuthenticated, async (req, res) => {
     try {
-      const orgIdHeader = req.headers["x-org-id"] as string;
+      const orgIdHeader = req.headers["x-org-id"];
       const orgId = getOrgIdFromHeaders(req);
       console.log(
         `[Server] /api/company received X-Org-Id header: "${orgIdHeader}" -> parsed as: ${orgId}`,
@@ -573,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertCompanySchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       const company = await storage.createCompany(validatedData);
       res.json(company);
@@ -589,7 +586,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertCompanySchema
         .partial()
-        .parse({ ...req.body, orgId: parseInt(orgId as string) });
+        .parse({ ...req.body, orgId: parseInt(orgId) });
       const company = await storage.updateCompany(id, validatedData);
 
       // If setup is being completed, create default roles
@@ -598,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `[Company Update] Setup completed for org_id: ${orgId}, creating default roles`,
         );
         try {
-          await storage.createDefaultRoles(parseInt(orgId as string));
+          await storage.createDefaultRoles(parseInt(orgId));
           console.log(
             `[Company Update] Default roles created successfully for org_id: ${orgId}`,
           );
@@ -627,10 +624,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Use storage function but catch the specific column error
       try {
         const leaveTypes = await storage.getLeaveTypes(
-          parseInt(orgId as string),
+          parseInt(orgId),
         );
         res.json(leaveTypes);
-      } catch (dbError: any) {
+      } catch (dbError) {
         if (
           dbError.message &&
           dbError.message.includes("negative_leave_balance")
@@ -642,12 +639,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             SELECT id, name, description, icon, color, annual_allowance, carry_forward, 
                    is_active, org_id, created_at, updated_at
             FROM leave_types 
-            WHERE is_active = true AND org_id = ${parseInt(orgId as string)}
+            WHERE is_active = true AND org_id = ${parseInt(orgId)}
             ORDER BY name
           `);
 
           // Add negativeLeaveBalance based on leave type name
-          const leaveTypesWithBalance = result.rows.map((row: any) => ({
+          const leaveTypesWithBalance = result.rows.map((row) => ({
             ...row,
             negativeLeaveBalance: row.name === "Casual & Sick Leave" ? 5 : 0,
           }));
@@ -669,7 +666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/leave-types", isAuthenticated, async (req, res) => {
     try {
       const orgId = req.headers["x-org-id"] || "60"; // Default to 60
-      const parsedOrgId = parseInt(orgId as string);
+      const parsedOrgId = parseInt(orgId);
 
       // Note: Duplicate checking is handled in the createLeaveType method itself
 
@@ -691,7 +688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertLeaveTypeSchema
         .partial()
-        .parse({ ...req.body, orgId: parseInt(orgId as string) });
+        .parse({ ...req.body, orgId: parseInt(orgId) });
       const leaveType = await storage.updateLeaveType(id, validatedData);
       res.json(leaveType);
     } catch (error) {
@@ -728,7 +725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertRoleSchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       const role = await storage.createRole(validatedData);
       res.json(role);
@@ -744,7 +741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertRoleSchema
         .partial()
-        .parse({ ...req.body, orgId: parseInt(orgId as string) });
+        .parse({ ...req.body, orgId: parseInt(orgId) });
       const role = await storage.updateRole(id, validatedData);
       res.json(role);
     } catch (error) {
@@ -884,7 +881,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const orgId = req.headers["x-org-id"] || "60";
       const assignments = await storage.getEmployeeAssignments(
-        parseInt(orgId as string),
+        parseInt(orgId),
       );
       res.json(assignments);
     } catch (error) {
@@ -904,14 +901,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Handle both request formats
         if (req.body.assignments) {
           // New format: { assignments: [...] }
-          assignments = req.body.assignments.map((assignment: any) => ({
+          assignments = req.body.assignments.map((assignment) => ({
             ...assignment,
             orgId,
           }));
         } else {
           // Legacy format: { leaveVariantId, assignmentType, userIds }
           const { leaveVariantId, assignmentType, userIds } = req.body;
-          assignments = userIds.map((userId: string) => ({
+          assignments = userIds.map((userId) => ({
             userId,
             leaveVariantId,
             assignmentType,
@@ -921,7 +918,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Filter out assignments with null or undefined userId
         const validAssignments = assignments.filter(
-          (assignment: any) => assignment.userId && assignment.userId !== null,
+          (assignment) => assignment.userId && assignment.userId !== null,
         );
         console.log(
           `Filtered ${assignments.length - validAssignments.length} assignments with null userId`,
@@ -956,7 +953,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             // Get external employee data for pro-rata calculations
             const authHeader = req.headers.authorization;
-            let externalEmployeeData: any[] = [];
+            let externalEmployeeData = [];
 
             if (authHeader && authHeader.startsWith("Bearer ")) {
               const jwtToken = authHeader.substring(7);
@@ -1051,7 +1048,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     const parts = dateStr.split("-");
                     if (parts.length === 3) {
                       const day = parts[0].padStart(2, "0");
-                      const monthMap: { [key: string]: string } = {
+                      const monthMap = {
                         Jan: "01",
                         Feb: "02",
                         Mar: "03",
@@ -1097,11 +1094,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const leaveBalance = await storage.createEmployeeLeaveBalance({
                 userId: assignment.userId,
                 leaveVariantId: assignment.leaveVariantId,
+                year: currentYear,
                 totalEntitlement: String(totalEntitlement), // Convert to string
                 currentBalance: String(currentBalance), // Convert to string
                 usedBalance: "0",
                 carryForward: "0",
-                year: currentYear,
                 orgId,
               });
 
@@ -1113,13 +1110,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               await storage.createLeaveBalanceTransaction({
                 userId: assignment.userId,
                 leaveVariantId: assignment.leaveVariantId,
+                year: currentYear,
                 transactionType: "grant",
                 amount: String(currentBalance), // Convert to string
                 balanceAfter: String(currentBalance), // Convert to string
                 description: isMidYearJoiner
                   ? `Pro-rata leave allocation for ${currentYear} (joined ${joiningDate})`
                   : `Leave allocation for ${currentYear}`,
-                year: currentYear,
                 orgId,
               });
             }
@@ -1152,10 +1149,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req, res) => {
       try {
-        const orgIdHeader = req.headers["x-org-id"] as string;
+        const orgIdHeader = req.headers["x-org-id"];
         const orgId = getOrgIdFromHeaders(req);
         const year = req.query.year
-          ? parseInt(req.query.year as string)
+          ? parseInt(req.query.year)
           : new Date().getFullYear();
 
         console.log(
@@ -1193,12 +1190,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     isAuthenticated,
     async (req, res) => {
       try {
-        const orgIdHeader = req.headers["x-org-id"] as string;
+        const orgIdHeader = req.headers["x-org-id"];
         const orgId = getOrgIdFromHeaders(req);
 
         const userId = req.params.userId;
         const year = req.query.year
-          ? parseInt(req.query.year as string)
+          ? parseInt(req.query.year)
           : undefined;
 
         console.log(`📊 [API] Getting balances for user ${userId}`);
@@ -1370,7 +1367,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Find approved requests where user has no balance
       const approvedRequests = leaveRequests.filter(
-        (req: any) => req.status === "approved",
+        (req) => req.status === "approved",
       );
 
       for (const request of approvedRequests) {
@@ -1387,7 +1384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Get user's assignments
           const userAssignments = assignments.filter(
-            (a: any) => a.userId === request.userId,
+            (a) => a.userId === request.userId,
           );
 
           for (const assignment of userAssignments) {
@@ -1401,7 +1398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Calculate total used for this variant
             const variantRequests = approvedRequests.filter(
-              (req: any) =>
+              (req) =>
                 req.userId === request.userId &&
                 leaveVariants.find(
                   (v) =>
@@ -1410,16 +1407,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 ),
             );
 
-            const totalUsedDays = variantRequests.reduce(
-              (sum: number, req: any) => {
-                const workingDays =
-                  typeof req.workingDays === "string"
-                    ? parseFloat(req.workingDays)
-                    : req.workingDays;
-                return sum + (workingDays || 0);
-              },
-              0,
-            );
+            const totalUsedDays = variantRequests.reduce((sum, req) => {
+              const workingDays =
+                typeof req.workingDays === "string"
+                  ? parseFloat(req.workingDays)
+                  : req.workingDays;
+              return sum + (workingDays || 0);
+            }, 0);
 
             const usedInHalfDays = Math.round(totalUsedDays * 2);
             const currentBalanceInHalfDays =
@@ -1674,10 +1668,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const data = await response.json();
-        const employeeMapping = new Map<string, string>();
+        const employeeMapping = new Map();
 
         if (data?.data?.data && Array.isArray(data.data.data)) {
-          data.data.data.forEach((employee: any) => {
+          data.data.data.forEach((employee) => {
             if (employee.employee_number && employee.user_id) {
               employeeMapping.set(
                 employee.employee_number.toString(),
@@ -1858,7 +1852,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   currentUsed +
                   parseFloat(request.workingDays?.toString() || "0");
                 const currentBalance = parseFloat(
-                  relevantBalance.currentBalance?.toString() || "0",
+                  relevantBalance.currentBalance.toString() || "0",
                 );
                 const newCurrentBalance = Math.max(
                   0,
@@ -1891,9 +1885,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error) {
         console.error("Error fixing Excel import transactions:", error);
-        res
-          .status(500)
-          .json({ message: "Failed to fix Excel import transactions" });
+        res.status(500).json({ message: "Failed to fix Excel import transactions" });
       }
     },
   );
@@ -2115,7 +2107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Creating workflow with data:", req.body);
       const validatedData = insertWorkflowSchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       console.log("Validated workflow data:", validatedData);
       const workflow = await storage.createWorkflow(validatedData);
@@ -2132,7 +2124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertWorkflowSchema
         .partial()
-        .parse({ ...req.body, orgId: parseInt(orgId as string) });
+        .parse({ ...req.body, orgId: parseInt(orgId) });
       const workflow = await storage.updateWorkflow(id, validatedData);
       res.json(workflow);
     } catch (error) {
@@ -2170,7 +2162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertCompOffConfigSchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       const config = await storage.upsertCompOffConfig(validatedData);
       res.json(config);
@@ -2201,7 +2193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const validatedData = insertCompOffVariantSchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       console.log("Validated data:", validatedData);
 
@@ -2225,7 +2217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const variant = await storage.updateCompOffVariant(id, {
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       res.json(variant);
     } catch (error) {
@@ -2266,7 +2258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertPTOVariantSchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       const variant = await storage.createPTOVariant(validatedData);
       res.json(variant);
@@ -2282,7 +2274,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const variant = await storage.updatePTOVariant(id, {
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       res.json(variant);
     } catch (error) {
@@ -2318,7 +2310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pto-requests", isAuthenticated, async (req, res) => {
     try {
       const orgId = getOrgIdFromHeaders(req);
-      const userId = req.query.userId as string;
+      const userId = req.query.userId;
       const requests = await storage.getPTORequests(orgId, userId);
       res.json(requests);
     } catch (error) {
@@ -2329,8 +2321,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/pto-requests", isAuthenticated, async (req, res) => {
     try {
+      // Get user ID from authenticated session or fallback to localStorage value stored in frontend
+      const userId = req.user?.claims?.sub || req.body.userId || "1";
       const orgId = getOrgIdFromHeaders(req);
-      console.log("Routes - Received PTO request data:", req.body);
 
       // Check for applicable workflow
       const workflow = await findApplicableWorkflow("pto", "apply-pto", orgId);
@@ -2422,7 +2415,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertPTOConfigSchema.parse({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       const config = await storage.upsertPTOConfig(validatedData);
       res.json(config);
@@ -2435,8 +2428,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leave requests routes
   app.get("/api/leave-requests", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.query.userId as string;
-      const status = req.query.status as string; // Add status filtering
+      const userId = req.query.userId;
+      const status = req.query.status; // Add status filtering
       const orgId = getOrgIdFromHeaders(req);
 
       console.log("🔍 [Server] Leave requests query:", {
@@ -2483,7 +2476,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           // Get unique leave type IDs from requests
           const leaveTypeIds = [
-            ...new Set(requests.map((r: any) => r.leaveTypeId)),
+            ...new Set(requests.map((r) => r.leaveTypeId)),
           ].filter((id) => id != null);
 
           console.log(
@@ -2497,7 +2490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Create a map of leave type IDs to names
             const leaveTypeMap = new Map();
-            leaveTypesData.forEach((lt: any) => {
+            leaveTypesData.forEach((lt) => {
               leaveTypeMap.set(lt.id, lt.name);
             });
 
@@ -2508,7 +2501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
 
             // Map leave type names to requests
-            requests.forEach((request: any) => {
+            requests.forEach((request) => {
               const leaveTypeName = leaveTypeMap.get(request.leaveTypeId);
               request.leaveTypeName =
                 leaveTypeName || `Unknown Leave Type (${request.leaveTypeId})`;
@@ -2517,7 +2510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log("✅ [Server] Successfully mapped leave type names:", {
               totalRequests: requests.length,
               uniqueLeaveTypes: leaveTypeIds.length,
-              sampleMapping: requests.slice(0, 3).map((r: any) => ({
+              sampleMapping: requests.slice(0, 3).map((r) => ({
                 leaveTypeId: r.leaveTypeId,
                 leaveTypeName: r.leaveTypeName,
               })),
@@ -2533,7 +2526,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             leaveTypeError,
           );
           // Fallback to original behavior if leave type lookup fails
-          requests.forEach((request: any) => {
+          requests.forEach((request) => {
             request.leaveTypeName = `Leave Type ${request.leaveTypeId}`;
           });
         }
@@ -2541,7 +2534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("📊 [Server] Fallback leave requests result:", {
         totalCount: requests.length,
-        userIds: requests.map((r: any) => r.userId),
+        userIds: requests.map((r) => r.userId),
         requestedUserId: userId,
         statusFilter: status,
       });
@@ -2557,7 +2550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Raw request body:", req.body);
 
-      const userId = (req.user as any)?.claims?.sub;
+      const userId = req.user?.claims?.sub;
       const orgId = getOrgIdFromHeaders(req);
 
       // Get workflow for leave applications
@@ -2579,7 +2572,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentStep = 1; // Start at first review step
 
         try {
-          const steps = workflow.steps as any[];
+          const steps = workflow.steps;
           const firstStep =
             Array.isArray(steps) && steps.length > 0 ? steps[0] : null;
 
@@ -2626,7 +2619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process auto-approval workflow if needed
       if (workflow && workflowStatus === "in_progress") {
         try {
-          const steps = workflow.steps as any[];
+          const steps = workflow.steps;
           const firstStep = steps[0];
 
           if (firstStep?.autoApproval === true) {
@@ -2723,8 +2716,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Create transaction record with appropriate description
               const deductionReason =
                 finalStatus === "approved"
-                  ? `Leave deduction for approved application #${request.id} (${workingDaysNum} days)`
-                  : `Leave balance deducted for pending application #${request.id} (${workingDaysNum} days) - Deduct before workflow`;
+                  ? `Leave deduction for approved application #${request.id} (${request.workingDays} days)`
+                  : `Leave balance deducted for pending application #${request.id} (${request.workingDays} days) - Deduct before workflow`;
 
               await storage.createLeaveBalanceTransaction({
                 userId: request.userId,
@@ -2901,7 +2894,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const validatedData = insertLeaveRequestSchema
         .partial()
-        .parse({ ...req.body, orgId: parseInt(orgId as string) });
+        .parse({ ...req.body, orgId: parseInt(orgId) });
       const request = await storage.updateLeaveRequest(id, validatedData);
       res.json(request);
     } catch (error) {
@@ -3017,10 +3010,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
             // Continue with deletion anyway
           }
-        } else {
-          console.log(
-            `DEBUG: Request status is ${request.status} - no balance restoration needed`,
-          );
         }
       }
 
@@ -3043,7 +3032,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const orgId = getOrgIdFromHeaders(req);
         const { reason } = req.body; // Withdrawal reason from frontend
 
-        // Get the leave request with org filtering
+        // Get the leave request first with org_id filtering
         const allRequests = await storage.getLeaveRequests(undefined, orgId);
         const request = allRequests.find((r) => r.id === id);
 
@@ -3111,9 +3100,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function for immediate withdrawal (when no workflow)
   async function processImmediateWithdrawal(
-    requestId: number,
-    request: any,
-    orgId: number,
+    requestId,
+    request,
+    orgId,
   ) {
     // Find the leave variant to restore balance
     const leaveVariants = await storage.getLeaveVariants(orgId);
@@ -3174,7 +3163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req, res) => {
       try {
         const id = parseInt(req.params.id);
-        const userId = (req.user as any)?.claims?.sub;
+        const userId = req.user?.claims?.sub;
         const orgId = getOrgIdFromHeaders(req);
 
         // Get the leave request first with org_id filtering
@@ -3185,7 +3174,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(404).json({ message: "Leave request not found" });
         }
 
-        if (!["pending", "withdrawal_pending"].includes(request.status ?? "")) {
+        if (!["pending", "withdrawal_pending"].includes(request.status)) {
           return res
             .status(400)
             .json({ message: "Request is not in a valid status for approval" });
@@ -3195,7 +3184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (request.status === "withdrawal_pending") {
           const updatedRequest = await storage.processWorkflowApproval(
             id,
-            userId ?? "",
+            userId || "",
             orgId,
           );
 
@@ -3234,7 +3223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Create missing balances for user based on their assignments
             const assignments = await storage.getEmployeeAssignments(orgId);
             const userAssignments = assignments.filter(
-              (a: any) => a.userId === request.userId,
+              (a) => a.userId === request.userId && a.assignmentType === "leave_variant",
             );
             let createdAnyBalances = false;
 
@@ -3409,7 +3398,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const id = parseInt(req.params.id);
         // Handle both development and production authentication
         const userId =
-          (req.user as any)?.claims?.sub ||
+          req.user?.claims?.sub ||
           (process.env.NODE_ENV === "development" ? "12080" : null);
         const { reason } = req.body;
         const orgId = getOrgIdFromHeaders(req);
@@ -3534,7 +3523,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           orgId,
         );
         res.json(updatedRequest);
-      } catch (error: unknown) {
+      } catch (error) {
         console.error("Error rejecting leave request:", error);
         const errorMessage =
           error instanceof Error
@@ -3569,7 +3558,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const variant = await storage.createLeaveVariant({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       res.json(variant);
     } catch (error) {
@@ -3592,7 +3581,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Parsed ID:", id);
       console.log("Org ID:", orgId);
 
-      const updateData = { ...req.body, orgId: parseInt(orgId as string) };
+      const updateData = { ...req.body, orgId: parseInt(orgId) };
       console.log("Final update data being sent to storage:", updateData);
 
       const variant = await storage.updateLeaveVariant(id, updateData);
@@ -3632,7 +3621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orgId = req.headers["x-org-id"] || "60";
       const holiday = await storage.createHoliday({
         ...req.body,
-        orgId: parseInt(orgId as string),
+        orgId: parseInt(orgId),
       });
       res.json(holiday);
     } catch (error) {
@@ -3642,10 +3631,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Comp off requests routes
-  app.get("/api/comp-off-requests", isAuthenticated, async (req: any, res) => {
+  app.get("/api/comp-off-requests", isAuthenticated, async (req, res) => {
     try {
       const orgId = getOrgIdFromHeaders(req);
-      const userId = req.query.userId as string;
+      const userId = req.query.userId;
 
       if (userId) {
         // Filter by specific user ID when provided
@@ -3662,7 +3651,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/comp-off-requests", isAuthenticated, async (req: any, res) => {
+  app.post("/api/comp-off-requests", isAuthenticated, async (req, res) => {
     try {
       // Get user ID from authenticated session or fallback to localStorage value stored in frontend
       const userId = req.user?.claims?.sub || req.body.userId || "1";
@@ -3724,7 +3713,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Starting workflow for comp-off ${request.type} request`);
         request = await startCompOffWorkflow(
           request.id,
-          workflow,
           request.userId,
           request.type,
         );
@@ -3764,9 +3752,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to find applicable workflow
   const findApplicableWorkflow = async (
-    process: string,
-    subProcess: string,
-    orgId: number,
+    process,
+    subProcess,
+    orgId,
   ) => {
     const workflows = await storage.getWorkflows(orgId);
     return workflows.find(
@@ -3779,9 +3767,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to start workflow for PTO request
   const startPTOWorkflow = async (
-    requestId: number,
-    workflow: any,
-    userId: string,
+    requestId,
+    workflow,
+    userId,
   ) => {
     const approvalHistory = [
       {
@@ -3807,10 +3795,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to start workflow for comp-off request
   const startCompOffWorkflow = async (
-    requestId: number,
-    workflow: any,
-    userId: string,
-    actionType: string,
+    requestId,
+    workflow,
+    userId,
+    actionType,
   ) => {
     const approvalHistory = [
       {
@@ -3834,7 +3822,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/pto-requests", isAuthenticated, async (req, res) => {
     try {
       const orgId = getOrgIdFromHeaders(req);
-      const userId = req.query.userId as string;
+      const userId = req.query.userId;
 
       const requests = await storage.getPTORequests(orgId, userId);
       res.json(requests);
@@ -3847,13 +3835,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch(
     "/api/comp-off-requests/:id",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const id = parseInt(req.params.id);
         const orgId = req.headers["x-org-id"] || "60";
         const validatedData = insertCompOffRequestSchema
           .partial()
-          .parse({ ...req.body, orgId: parseInt(orgId as string) });
+          .parse({ ...req.body, orgId: parseInt(orgId) });
         const request = await storage.updateCompOffRequest(id, validatedData);
         res.json(request);
       } catch (error) {
@@ -3866,7 +3854,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete(
     "/api/comp-off-requests/:id",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const id = parseInt(req.params.id);
         await storage.deleteCompOffRequest(id);
@@ -3881,7 +3869,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/comp-off-requests/:id/approve",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const id = parseInt(req.params.id);
         const approvedBy = req.user.claims.sub;
@@ -3926,7 +3914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/comp-off-requests/:id/reject",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const id = parseInt(req.params.id);
         const rejectedBy = req.user?.claims?.sub || "system";
@@ -3986,7 +3974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/pto-requests/:id/approve",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const id = parseInt(req.params.id);
         const approvedBy = req.user?.claims?.sub || "system";
@@ -4041,7 +4029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/pto-requests/:id/reject",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const id = parseInt(req.params.id);
         const rejectedBy = req.user?.claims?.sub || "system";
@@ -4179,10 +4167,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // In-memory storage for uploaded documents (in production, use cloud storage)
-  const uploadedDocuments = new Map<
-    string,
-    { buffer: Buffer; mimetype: string; originalname: string }
-  >();
+  const uploadedDocuments = new Map();
 
   // Document upload endpoint
   app.post(
@@ -4191,7 +4176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     documentUpload.array("documents", 5),
     async (req, res) => {
       try {
-        const files = req.files as Express.Multer.File[];
+        const files = req.files;
         if (!files || files.length === 0) {
           return res.status(400).json({ message: "No files uploaded" });
         }
@@ -4219,7 +4204,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Helper function to validate date format (dd-MM-YYYY)
-  function isValidDate(dateString: string): boolean {
+  function isValidDate(dateString) {
     try {
       // Check format: dd-MM-YYYY
       const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
@@ -4245,7 +4230,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Helper function to convert dd-MM-YYYY to Date object
-  function parseDate(dateString: string): Date {
+  function parseDate(dateString) {
     const [day, month, year] = dateString
       .split("-")
       .map((num) => parseInt(num, 10));
@@ -4284,7 +4269,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Helper function to get employee mapping from external API (same as execution)
-        async function getEmployeeMapping(): Promise<Map<string, string>> {
+        async function getEmployeeMapping() {
           try {
             const authHeader = req.headers.authorization;
             console.log(
@@ -4376,11 +4361,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               data.data?.data ? data.data.data.length : "null",
             );
 
-            const employeeMap = new Map<string, string>();
+            const employeeMap = new Map();
 
-            // The API response structure is data.data.data (nested data property)
             if (data.data?.data && Array.isArray(data.data.data)) {
-              data.data.data.forEach((employee: any, index: number) => {
+              data.data.data.forEach((employee, index) => {
                 if (employee.employee_number && employee.user_id) {
                   employeeMap.set(
                     employee.employee_number.toString(),
@@ -4438,7 +4422,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Helper function to convert Excel serial dates to proper date strings
-        function excelDateToJSDate(serial: number): Date {
+        function excelDateToJSDate(serial) {
           // Excel serial date epoch starts at 1900-01-01, but treats 1900 as a leap year
           const epochDiff = 25569; // Days between 1900-01-01 and 1970-01-01
           const msPerDay = 86400000; // Milliseconds per day
@@ -4450,7 +4434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Helper function to format date to dd-MM-YYYY
-        function formatDateToDDMMYYYY(date: Date): string {
+        function formatDateToDDMMYYYY(date) {
           const day = date.getDate().toString().padStart(2, "0");
           const month = (date.getMonth() + 1).toString().padStart(2, "0");
           const year = date.getFullYear();
@@ -4458,7 +4442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Helper function to handle Excel date values
-        function processExcelDate(value: any): string {
+        function processExcelDate(value) {
           if (typeof value === "number") {
             // It's an Excel serial date number
             const jsDate = excelDateToJSDate(value);
@@ -4495,7 +4479,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Debug each row in detail
-        rawData.forEach((row: any, index: number) => {
+        rawData.forEach((row, index) => {
           if (index < 10) {
             console.log(`[ExcelValidation] Row ${index}:`, row);
             console.log(
@@ -4523,7 +4507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Filter out rows that are clearly headers or empty
         const jsonData = rawData
-          .filter((row: any, index: number) => {
+          .filter((row, index) => {
             // Skip first 3 rows entirely (they're always headers in the template)
             if (index < 3) {
               console.log(
@@ -4580,7 +4564,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             );
             return true;
           })
-          .map((row: any) => {
+          .map((row) => {
             if (importType === "balances") {
               return {
                 EmpNumber: row[0],
@@ -4620,8 +4604,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
           });
 
-        const validationErrors: string[] = [];
-        const validData: any[] = [];
+        const validationErrors = [];
+        const validData = [];
 
         // Get existing leave types for validation
         const leaveTypes = await storage.getLeaveTypes(orgId);
@@ -4640,8 +4624,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Validate each row
-        for (let index = 0; index < (jsonData as any[]).length; index++) {
-          const row = (jsonData as any[])[index];
+        for (let index = 0; index < jsonData.length; index++) {
+          const row = jsonData[index];
           const rowNum = index + 5; // Adjust for header rows (title, empty, header, data starts at row 5)
 
           // Skip empty rows
@@ -4844,27 +4828,114 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Map leave type codes to full names and handle common misspellings
           let mappedLeaveType = row.LeaveType;
-          if (row.LeaveType === "EL") mappedLeaveType = "Earned Leave";
-          else if (row.LeaveType === "CL") mappedLeaveType = "Casual Leave";
-          else if (row.LeaveType === "SL") mappedLeaveType = "Sick Leave";
-          else if (row.LeaveType === "ML") mappedLeaveType = "Maternity Leave";
-          else if (row.LeaveType === "PL") mappedLeaveType = "Paternity Leave";
-          else if (row.LeaveType === "BL")
-            mappedLeaveType = "Bereavement Leave";
-          else if (row.LeaveType === "Privilege Leave")
-            mappedLeaveType = "Privilege Leave";
-          else if (row.LeaveType === "Privelege Leave")
-            mappedLeaveType = "Privilege Leave"; // Handle common misspelling
 
+          // First, handle common leave type codes
+          const codeToNameMap = {
+            EL: "Earned Leave",
+            CL: "Casual Leave",
+            SL: "Sick Leave",
+            ML: "Maternity Leave",
+            PL: "Paternity Leave",
+            BL: "Bereavement Leave",
+            AL: "Annual Leave",
+            VL: "Vacation Leave",
+            FL: "Festival Leave",
+            HL: "Holiday Leave",
+            CompOff: "Compensatory Off",
+            LWP: "Leave Without Pay",
+          };
+
+          // Map codes to full names if it's a known code
+          if (codeToNameMap[row.LeaveType]) {
+            mappedLeaveType = codeToNameMap[row.LeaveType];
+          }
+
+          // Handle common combined leave type variations (only for codes, not full names)
+          const combinedTypeMap = {
+            "CL/SL": "Casual Leave",
+            "CL & SL": "Casual Leave",
+            "CL+SL": "Casual Leave",
+          };
+
+          // Only apply mapping for short codes, not full custom leave type names
+          if (
+            combinedTypeMap[row.LeaveType] &&
+            row.LeaveType.length <= 10
+          ) {
+            mappedLeaveType = combinedTypeMap[row.LeaveType];
+          }
+
+          // Smart leave type matching - handles custom leave types
           console.log(
-            `[ExcelValidation] Row ${rowNum}: LeaveType "${row.LeaveType}" mapped to "${mappedLeaveType}"`,
+            `[ExcelValidation] Looking for leave type:`,
+            mappedLeaveType,
+          );
+          console.log(
+            `[ExcelValidation] Available leave types:`,
+            leaveTypes.map((lt) => lt.name),
           );
 
-          // Validate leave type exists (case insensitive)
+          let leaveType = null;
+          const searchTerm = mappedLeaveType.toLowerCase().trim();
+
+          // 1. Try exact match first (case-insensitive)
+          leaveType = leaveTypes.find(
+            (lt) => lt.name.toLowerCase().trim() === searchTerm,
+          );
+
+          // 2. Try exact match with the original Excel value (for custom leave types)
+          if (!leaveType) {
+            leaveType = leaveTypes.find(
+              (lt) =>
+                lt.name.toLowerCase().trim() ===
+                row.LeaveType.toLowerCase().trim(),
+            );
+          }
+
+          // 3. Try fuzzy matching with word boundaries
+          if (!leaveType) {
+            leaveType = leaveTypes.find((lt) => {
+              const ltName = lt.name.toLowerCase().trim();
+              const words = searchTerm.split(/[\s&/+,-]+/);
+
+              // Check if any significant word from Excel matches leave type name
+              for (const word of words) {
+                if (word.length >= 3 && ltName.includes(word)) {
+                  return true;
+                }
+              }
+
+              // Check reverse - if leave type words match Excel term
+              const ltWords = ltName.split(/[\s&/+,-]+/);
+              for (const ltWord of ltWords) {
+                if (ltWord.length >= 3 && searchTerm.includes(ltWord)) {
+                  return true;
+                }
+              }
+
+              return false;
+            });
+          }
+
+          // 4. Last resort: check if Excel value is already a perfect custom leave type name
           if (
-            mappedLeaveType &&
-            !leaveTypeNames.includes(mappedLeaveType.toLowerCase())
+            !leaveType &&
+            row.LeaveType.length > 2 &&
+            !codeToNameMap[row.LeaveType]
           ) {
+            console.log(
+              `[ExcelValidation] Trying original value as custom leave type: "${row.LeaveType}"`,
+            );
+            leaveType = leaveTypes.find(
+              (lt) =>
+                lt.name
+                  .toLowerCase()
+                  .includes(row.LeaveType.toLowerCase()) ||
+                row.LeaveType.toLowerCase().includes(lt.name.toLowerCase()),
+            );
+          }
+
+          if (!leaveType) {
             validationErrors.push(
               `Row ${rowNum}: Leave Type "${row.LeaveType}" not found. Available types: ${leaveTypes.map((lt) => lt.name).join(", ")}`,
             );
@@ -4896,32 +4967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 LeaveLapsed: lapsed,
               });
             } else {
-              // Process Status field - handle both numeric and text values
-              let statusValue = "approved"; // default
-              if (row.Status) {
-                if (typeof row.Status === "string") {
-                  statusValue = row.Status.toLowerCase();
-                } else if (typeof row.Status === "number") {
-                  // Convert numeric status to text
-                  switch (row.Status) {
-                    case 1:
-                      statusValue = "approved";
-                      break;
-                    case 0:
-                      statusValue = "rejected";
-                      break;
-                    case 2:
-                      statusValue = "pending";
-                      break;
-                    case 3:
-                      statusValue = "withdrawn";
-                      break;
-                    default:
-                      statusValue = "approved";
-                  }
-                }
-              }
-
+              // Process transaction data
               validData.push({
                 ...row,
                 LeaveType: mappedLeaveType,
@@ -4934,7 +4980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 "Is End Date a Half Day":
                   row["Is End Date a Half Day"] === "TRUE" ||
                   row["Is End Date a Half Day"] === true,
-                Status: statusValue,
+                Status: row.Status || "approved",
               });
             }
           }
@@ -4970,9 +5016,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               leaveType: row.LeaveType,
               startDate: row.LeaveTakenStartDate,
               endDate: row.LeaveTakenEndDate,
-              days: row.TotalLeaveDays,
-              isStartHalfDay: row["Is Start Date a Half Day"],
-              isEndHalfDay: row["Is End Date a Half Day"],
+              days: parseFloat(row.TotalLeaveDays || "0"),
+              isStartHalfDay:
+                row["Is Start Date a Half Day"] === "TRUE" ||
+                row["Is Start Date a Half Day"] === true,
+              isEndHalfDay:
+                row["Is End Date a Half Day"] === "TRUE" ||
+                row["Is End Date a Half Day"] === true,
               status: row.Status || "approved",
             };
           }
@@ -5044,7 +5094,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // FIXED: Helper function to get employee mapping from external API
-        async function getEmployeeMapping(): Promise<Map<string, string>> {
+        async function getEmployeeMapping() {
           // SOLUTION: Use same JWT token source as HR Report (from frontend localStorage)
           // The Authorization header JWT token is not working for org_id 13
           // We need to get the JWT token from the frontend localStorage like the HR Report does
@@ -5100,11 +5150,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             const data = await response.json();
-            const employeeMap = new Map<string, string>();
+            const employeeMap = new Map();
 
             // Parse the nested data structure
             if (data?.data?.data && Array.isArray(data.data.data)) {
-              data.data.data.forEach((employee: any) => {
+              data.data.data.forEach((employee) => {
                 if (employee.employee_number && employee.user_id) {
                   employeeMap.set(
                     employee.employee_number.toString(),
@@ -5150,21 +5200,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Helper function to convert Excel serial dates to proper date strings (same as validation)
-        function excelDateToJSDate(serial: number): Date {
+        function excelDateToJSDate(serial) {
           const epochDiff = 25569;
           const msPerDay = 86400000;
           const adjustedSerial = serial > 59 ? serial - 1 : serial;
           return new Date((adjustedSerial - epochDiff) * msPerDay);
         }
 
-        function formatDateToDDMMYYYY(date: Date): string {
+        function formatDateToDDMMYYYY(date) {
           const day = date.getDate().toString().padStart(2, "0");
           const month = (date.getMonth() + 1).toString().padStart(2, "0");
           const year = date.getFullYear();
           return `${day}-${month}-${year}`;
         }
 
-        function processExcelDate(value: any): string {
+        function processExcelDate(value) {
           if (typeof value === "number") {
             const jsDate = excelDateToJSDate(value);
             return formatDateToDDMMYYYY(jsDate);
@@ -5191,7 +5241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Filter out rows that are clearly headers or empty
         const jsonData = rawData
-          .filter((row: any, index: number) => {
+          .filter((row, index) => {
             // Skip first 3 rows entirely (they're always headers in the template)
             if (index < 3) {
               return false;
@@ -5236,7 +5286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             return true;
           })
-          .map((row: any) => {
+          .map((row) => {
             if (importType === "balances") {
               return {
                 EmpNumber: row[0],
@@ -5289,12 +5339,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         // Batch arrays for performance optimization
-        const leaveRequestsBatch: any[] = [];
-        const balanceTransactionsBatch: any[] = [];
-        const balanceUpdatesBatch: any[] = [];
+        const leaveRequestsBatch = [];
+        const balanceTransactionsBatch = [];
+        const balanceUpdatesBatch = [];
 
         // CRITICAL FIX: Track processed user/variant combinations to prevent Excel row duplicates
-        const processedCombinations = new Set<string>();
+        const processedCombinations = new Set();
 
         // Track import statistics
         const importStats = {
@@ -5308,7 +5358,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           successful: 0,
         };
 
-        for (const row of jsonData as any[]) {
+        for (const row of jsonData) {
           if (importType === "balances") {
             console.log(`[ExcelImport] Processing balance row:`, {
               EmpNumber: row.EmpNumber,
@@ -5381,12 +5431,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const encashed = parseFloat(row.LeaveEncashed || "0") || 0;
             const lapsed = parseFloat(row.LeaveLapsed || "0") || 0;
 
-            console.log(`[ExcelImport] Parsed balances:`, {
-              openingBalance,
-              availed,
-              encashed,
-              lapsed,
-            });
+            console.log(
+              `[ExcelImport] Parsed balances:`,
+              {
+                openingBalance,
+                availed,
+                encashed,
+                lapsed,
+              },
+            );
 
             // Process ALL rows including zero balances - they still get configured entitlement
             console.log(
@@ -5438,7 +5491,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             };
 
             // Only apply mapping for short codes, not full custom leave type names
-            if (combinedTypeMap[row.LeaveType] && row.LeaveType.length <= 10) {
+            if (
+              combinedTypeMap[row.LeaveType] &&
+              row.LeaveType.length <= 10
+            ) {
               mappedLeaveType = combinedTypeMap[row.LeaveType];
             }
 
@@ -5505,7 +5561,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               );
               leaveType = leaveTypes.find(
                 (lt) =>
-                  lt.name.toLowerCase().includes(row.LeaveType.toLowerCase()) ||
+                  lt.name
+                    .toLowerCase()
+                    .includes(row.LeaveType.toLowerCase()) ||
                   row.LeaveType.toLowerCase().includes(lt.name.toLowerCase()),
               );
             }
@@ -6046,8 +6104,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Transform imported data for frontend display
-        const importedData = (jsonData as any[])
-          .filter((row: any) => {
+        const importedData = (jsonData)
+          .filter((row) => {
             if (!row.EmpNumber || !row.EmpName || !row.LeaveType) return false;
             if (importType === "balances") {
               const openingBalance =
@@ -6062,23 +6120,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
               return parseFloat(row.TotalLeaveDays || "0") > 0;
             }
           })
-          .map((row: any) => {
+          .map((row) => {
             if (importType === "balances") {
-              const openingBalance =
-                parseFloat(row.LeaveOpeningBalance || "0") || 0;
-              const availed = parseFloat(row.LeaveAvailed || "0") || 0;
-              const encashed = parseFloat(row.LeaveEncashed || "0") || 0;
-              const lapsed = parseFloat(row.LeaveLapsed || "0") || 0;
-
               return {
                 empNumber: row.EmpNumber,
                 empName: row.EmpName,
                 leaveType: row.LeaveType,
-                openingBalance: openingBalance,
-                availed: availed,
-                encashed: encashed,
-                lapsed: lapsed,
-                currentBalance: openingBalance - availed - encashed - lapsed,
+                openingBalance: row.LeaveOpeningBalance,
+                availed: row.LeaveAvailed,
+                encashed: row.LeaveEncashed,
+                lapsed: row.LeaveLapsed,
+                currentBalance:
+                  row.LeaveOpeningBalance -
+                  row.LeaveAvailed -
+                  row.LeaveEncashed -
+                  row.LeaveLapsed,
               };
             } else {
               return {
@@ -6646,7 +6702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .values(tasksWithTokens)
           .returning();
 
-        // Send notifications to assignees
+        // Sendnotifications to assignees
         for (const task of createdTasks) {
           await sendTaskNotification(task);
         }
@@ -6935,7 +6991,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return randomBytes(32).toString("hex");
   }
 
-  async function sendTaskNotification(task: any): Promise<void> {
+  async function sendTaskNotification(task): Promise<void> {
     // TODO: Implement email/WhatsApp notifications
     console.log(
       `Notification would be sent to ${task.assigneeEmail} for task: ${task.taskDescription}`,
@@ -6957,7 +7013,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(
     "/api/collaborative-leave-settings",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const orgId = req.headers["x-org-id"]
           ? parseInt(req.headers["x-org-id"])
@@ -6996,7 +7052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put(
     "/api/collaborative-leave-settings",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const orgId = req.headers["x-org-id"]
           ? parseInt(req.headers["x-org-id"])
@@ -7047,7 +7103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(
     "/api/leave-requests/:leaveRequestId/tasks",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const orgId = req.headers["x-org-id"]
           ? parseInt(req.headers["x-org-id"])
@@ -7079,7 +7135,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/leave-requests/:leaveRequestId/tasks",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const orgId = req.headers["x-org-id"]
           ? parseInt(req.headers["x-org-id"])
@@ -7320,7 +7376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(
     "/api/leave-requests/:leaveRequestId/closure-report",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const orgId = req.headers["x-org-id"]
           ? parseInt(req.headers["x-org-id"])
@@ -7353,7 +7409,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post(
     "/api/leave-requests/:leaveRequestId/closure-report",
     isAuthenticated,
-    async (req: any, res) => {
+    async (req, res) => {
       try {
         const orgId = req.headers["x-org-id"]
           ? parseInt(req.headers["x-org-id"])
@@ -7472,7 +7528,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
   // Delete all imported transaction data from external database
   app.delete(
     "/api/delete-all-imported-data",
@@ -7639,5 +7694,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  return httpServer;
+  return server;
 }
+
+module.exports = { registerRoutes };
