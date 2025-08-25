@@ -1,14 +1,15 @@
 {
   "name": "rest-express",
   "version": "1.0.0",
+  "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "nodemon server/index.ts",
-    "build": "vite build && tsc",
-    "start": "NODE_ENV=production node dist/index.js",
-    "preview": "vite preview",
-    "azure:build": "npm install && npm run build",
-    "azure:start": "NODE_ENV=production node dist/index.js"
+    "dev": "nodemon",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "start": "cross-env NODE_ENV=production node dist/index.js",
+    "check": "tsc",
+    "client":"vite",         
+    "db:push": "drizzle-kit push"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

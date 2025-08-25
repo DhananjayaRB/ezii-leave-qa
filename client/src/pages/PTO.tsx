@@ -129,13 +129,13 @@ export default function PTO() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Break Time Off (BTO)</h1>
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Break Time Off (BTO)</h1>
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -145,7 +145,7 @@ export default function PTO() {
               </SelectContent>
             </Select>
             <Button 
-              className="bg-teal-600 hover:bg-teal-700 text-white"
+              className="w-full sm:w-auto bg-teal-600 hover:bg-teal-700 text-white"
               onClick={() => setShowApplicationForm(true)}
             >
               <Plus className="w-4 h-4 mr-2" />
@@ -155,50 +155,50 @@ export default function PTO() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.totalGranted}</div>
-              <div className="text-sm text-gray-600">Total Approved</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.totalGranted}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Total Approved</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-yellow-600">{stats.pendingApprovals}</div>
-              <div className="text-sm text-gray-600">Pending Approvals</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-yellow-600">{stats.pendingApprovals}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Pending Approvals</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-blue-600">{stats.totalAvailed.toFixed(1)}h</div>
-              <div className="text-sm text-gray-600">Total Hours</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-blue-600">{stats.totalAvailed.toFixed(1)}h</div>
+              <div className="text-xs sm:text-sm text-gray-600">Total Hours</div>
             </CardContent>
           </Card>
 
           <Card className="bg-red-50 border-red-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
-              <div className="text-sm text-red-700">Rejected</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-red-600">{stats.rejected}</div>
+              <div className="text-xs sm:text-sm text-red-700">Rejected</div>
             </CardContent>
           </Card>
 
           <Card className="bg-gray-50 border-gray-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-600">{stats.cancelled}</div>
-              <div className="text-sm text-gray-700">Cancelled</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-600">{stats.cancelled}</div>
+              <div className="text-xs sm:text-sm text-gray-700">Cancelled</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center space-x-6 border-b border-gray-200">
+        <div className="flex items-center space-x-3 sm:space-x-6 border-b border-gray-200 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center space-x-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex items-center space-x-1 sm:space-x-2 px-1 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? "border-blue-500 text-blue-600"
                   : "border-transparent text-gray-500 hover:text-gray-700"
@@ -245,22 +245,22 @@ export default function PTO() {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Date
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Time / Type
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                         Reason
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                         Applied On
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Action
                       </th>
                     </tr>
@@ -268,28 +268,28 @@ export default function PTO() {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredRequests.map((request: any) => (
                       <tr key={request.id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {format(new Date(request.requestDate), "dd MMM yyyy")}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                           {formatTimeDisplay(request)}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
+                        <td className="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 max-w-xs truncate hidden sm:table-cell">
                           {request.reason}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
                           <span className={getStatusBadge(request.status)}>
                             {getStatusIcon(request.status)}
-                            {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                            <span className="hidden sm:inline ml-1">{request.status.charAt(0).toUpperCase() + request.status.slice(1)}</span>
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden md:table-cell">
                           {format(new Date(request.createdAt), "dd MMM yyyy")}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-                            <Eye className="w-4 h-4 mr-1" />
-                            View
+                        <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                          <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50 p-1 sm:p-2">
+                            <Eye className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-1" />
+                            <span className="hidden sm:inline">View</span>
                           </Button>
                         </td>
                       </tr>

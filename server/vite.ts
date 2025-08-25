@@ -1,12 +1,14 @@
-const fs = require("fs");
-const path = require("path");
-const express = require("express");
-const { createServer: createViteServer, createLogger } = require("vite");
-const { nanoid } = require("nanoid");
+import express, { type Express } from "express";
+import fs from "fs";
+import path from "path";
+import { createServer as createViteServer, createLogger } from "vite";
+import { type Server } from "http";
+import viteConfig from "../vite.config";
+import { nanoid } from "nanoid";
 
 const viteLogger = createLogger();
 
-const log = (...args) => {
+export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
@@ -14,10 +16,10 @@ const log = (...args) => {
     hour12: true,
   });
 
-  console.log(`${formattedTime} [express] ${args}`);
-};
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
 
-async function setupVite(app, server) {
+export async function setupVite(app: Express, server: Server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
@@ -59,19 +61,19 @@ async function setupVite(app, server) {
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
     } catch (e) {
-      vite.ssrFixStacktrace(e);
+      vite.ssrFixStacktrace(e as Error);
       next(e);
     }
   });
 }
 
-function serveStatic(app) {
+export function serveStatic(app: Express) {
   if (process.env.NODE_ENV !== 'production') {
     console.log('Skipping static file serving in development mode');
     return;
   }
 
-  const distPath = path.resolve("dist/public");
+  const distPath = path.resolve(import.meta.dirname, "public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
@@ -82,9 +84,7 @@ function serveStatic(app) {
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
-  app.get("*", (_req, res) => {
+  app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
 }
-
-module.exports = { setupVite, serveStatic, log };

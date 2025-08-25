@@ -7,7 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ExternalLink, Check, X, FileText, Download, Eye, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ExternalLink, Check, X, FileText, Download, Eye, Search, ChevronLeft, ChevronRight, Clock, AlertCircle, User, Calendar, Filter } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,6 +27,8 @@ export default function Approvals() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [selectedRequests, setSelectedRequests] = useState<Set<number>>(new Set());
+  const [viewMode, setViewMode] = useState<'table' | 'cards'>('cards');
   const { toast } = useToast();
   
   // Get reporting manager data for filtering
@@ -95,16 +98,13 @@ export default function Approvals() {
       return `${dbEmployee.firstName} ${dbEmployee.lastName || ''}`.trim();
     }
     
-    // Only use authentic database users - no hardcoded mappings
-    
     // If external API and database lookup both fail, show employee ID only
-    // This ensures we never display fake employee names
     return `Employee ID: ${userId}`;
   };
 
   // Function to check if a leave request overlaps with any blackout period
   const checkBlackoutPeriodConflict = (userId: string, startDate: string, endDate: string): { hasConflict: boolean, periodName?: string } => {
-    if (!blackoutPeriods || blackoutPeriods.length === 0) {
+    if (!blackoutPeriods || !Array.isArray(blackoutPeriods) || blackoutPeriods.length === 0) {
       return { hasConflict: false };
     }
     
@@ -142,16 +142,8 @@ export default function Approvals() {
   let filteredPtoRequests = ptoRequests as any[];
   let filteredCompOffRequests = compOffRequests as any[];
   
-  console.log('🔍 [Approvals] Pre-filter comp-off requests:', filteredCompOffRequests.length);
-  console.log('🔍 [Approvals] Reporting manager data:', {
-    isReportingManager: reportingManagerData.isReportingManager,
-    reporteesCount: reportingManagerData.reportees.length,
-    currentView: currentView
-  });
-  
   if (reportingManagerData.isReportingManager && reportingManagerData.reportees.length > 0) {
     const reporteeIds = reportingManagerData.reportees.map(r => r.user_id.toString());
-    console.log('🔍 [Approvals] Filtering for reportees:', reporteeIds);
     
     filteredLeaveRequests = filteredLeaveRequests.filter(req => 
       reporteeIds.includes(req.userId?.toString())
@@ -162,10 +154,6 @@ export default function Approvals() {
     filteredCompOffRequests = filteredCompOffRequests.filter(req => 
       reporteeIds.includes(req.userId?.toString())
     );
-    
-    console.log('🔍 [Approvals] Post-filter comp-off requests:', filteredCompOffRequests.length);
-  } else {
-    console.log('🔍 [Approvals] No filtering applied - showing all requests');
   }
 
   // Get current tab data based on selected request type
@@ -279,6 +267,60 @@ export default function Approvals() {
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     setCurrentPage(1);
+  };
+
+  // Bulk actions handlers
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const pendingIds = getAllFilteredRequests()
+        .filter((req: any) => req.status === 'pending' || req.status === 'withdrawal_pending')
+        .map((req: any) => req.id);
+      setSelectedRequests(new Set(pendingIds));
+    } else {
+      setSelectedRequests(new Set());
+    }
+  };
+
+  const handleSelectRequest = (requestId: number, checked: boolean) => {
+    const newSelected = new Set(selectedRequests);
+    if (checked) {
+      newSelected.add(requestId);
+    } else {
+      newSelected.delete(requestId);
+    }
+    setSelectedRequests(newSelected);
+  };
+
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (requestIds: number[]) => {
+      const endpoint = getApprovalEndpoint();
+      const promises = requestIds.map(id => apiRequest("POST", `${endpoint}/${id}/approve`));
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/leave-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/pto-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comp-off-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/employee-leave-balances"] });
+      setSelectedRequests(new Set());
+      toast({
+        title: "Success",
+        description: `${selectedRequests.size} requests approved successfully`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to approve requests",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleBulkApprove = () => {
+    if (selectedRequests.size > 0) {
+      bulkApproveMutation.mutate(Array.from(selectedRequests));
+    }
   };
 
   // Approve request mutation
@@ -395,275 +437,543 @@ export default function Approvals() {
             </div>
           </CardHeader>
           <CardContent>
-            {/* Sub-tabs for approval status */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-6 border-b border-gray-200">
-                {approvalTabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleTabChange(tab.id)}
-                    className={`flex items-center space-x-2 px-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                      selectedApprovalTab === tab.id
-                        ? "border-blue-500 text-blue-600"
-                        : "border-transparent text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <span>{tab.label} ({tab.count})</span>
-                  </button>
-                ))}
-              </div>
-              <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
-                <ExternalLink className="w-4 h-4 mr-1" />
-                View All
-              </Button>
+            {/* Summary Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              {approvalTabs.map((tab) => (
+                <Card key={tab.id} className={`cursor-pointer transition-all ${
+                  selectedApprovalTab === tab.id 
+                    ? 'ring-2 ring-blue-500 bg-blue-50' 
+                    : 'hover:shadow-md'
+                }`} onClick={() => handleTabChange(tab.id)}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">{tab.label}</p>
+                        <p className="text-2xl font-bold text-gray-900">{tab.count}</p>
+                      </div>
+                      <div className={`p-2 rounded-full ${
+                        tab.id === 'Pending' ? 'bg-yellow-100' :
+                        tab.id === 'Approved' ? 'bg-green-100' :
+                        tab.id === 'Rejected' ? 'bg-red-100' : 'bg-gray-100'
+                      }`}>
+                        {tab.id === 'Pending' ? <Clock className="w-5 h-5 text-yellow-600" /> :
+                         tab.id === 'Approved' ? <Check className="w-5 h-5 text-green-600" /> :
+                         tab.id === 'Rejected' ? <X className="w-5 h-5 text-red-600" /> :
+                         <Filter className="w-5 h-5 text-gray-600" />}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by employee name, leave type, or status..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-10"
-                />
+            {/* Search and Actions Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
+              <div className="flex items-center space-x-4 w-full sm:w-auto">
+                <div className="relative flex-1 sm:w-80">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by employee name, leave type, or status..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                {selectedRequests.size > 0 && (
+                  <div className="flex items-center space-x-2 mr-4">
+                    <span className="text-sm text-gray-600">{selectedRequests.size} selected</span>
+                    <Button
+                      size="sm"
+                      onClick={handleBulkApprove}
+                      disabled={bulkApproveMutation.isPending}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Check className="w-4 h-4 mr-1" />
+                      Approve All
+                    </Button>
+                  </div>
+                )}
+                <div className="flex items-center space-x-1 border rounded-md">
+                  <Button
+                    variant={viewMode === 'cards' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('cards')}
+                    className="rounded-r-none"
+                  >
+                    Cards
+                  </Button>
+                  <Button
+                    variant={viewMode === 'table' ? 'default' : 'ghost'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                    className="rounded-l-none"
+                  >
+                    Table
+                  </Button>
+                </div>
               </div>
             </div>
 
             {/* Leave Requests List */}
             {isLoadingEmployees ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 text-sm">Loading employee data...</p>
+              <div className="text-center py-12">
+                <div className="inline-flex items-center space-x-2 text-gray-500">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <p className="text-sm">Loading employee data...</p>
+                </div>
               </div>
             ) : getAllFilteredRequests().length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 text-sm">
-                  {searchQuery ? `No results found for "${searchQuery}"` : "No leave requests found"}
+              <div className="text-center py-12">
+                <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <Search className="w-8 h-8 text-gray-400" />
+                </div>
+                <p className="text-gray-500 text-lg font-medium mb-2">
+                  {searchQuery ? 'No results found' : 'No requests found'}
+                </p>
+                <p className="text-gray-400 text-sm">
+                  {searchQuery ? `Try adjusting your search for "${searchQuery}"` : 'There are no approval requests at this time'}
                 </p>
               </div>
+            ) : viewMode === 'cards' ? (
+              <>
+                {/* Bulk Selection Header */}
+                {selectedApprovalTab === 'Pending' && getAllFilteredRequests().some((req: any) => req.status === 'pending' || req.status === 'withdrawal_pending') && (
+                  <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                    <Checkbox
+                      checked={getAllFilteredRequests().filter((req: any) => req.status === 'pending' || req.status === 'withdrawal_pending').every((req: any) => selectedRequests.has(req.id))}
+                      onCheckedChange={handleSelectAll}
+                    />
+                    <span className="text-sm font-medium text-gray-700">Select all pending requests</span>
+                  </div>
+                )}
+                
+                {/* Cards View */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+                  {paginatedRequests().map((request: any) => {
+                    // Handle different request types
+                    let displayInfo;
+                    if (activeRequestTab === "BTO") {
+                      displayInfo = {
+                        type: "BTO",
+                        startDate: new Date(request.requestDate).toLocaleDateString(),
+                        endDate: new Date(request.requestDate).toLocaleDateString(),
+                        days: request.timeType === 'half_day' ? '0.5' : request.timeType === 'quarter_day' ? '0.25' : request.totalHours ? `${request.totalHours}h` : '1',
+                        hasDocuments: request.documentUrl
+                      };
+                    } else if (activeRequestTab === "CompOff") {
+                      displayInfo = {
+                        type: `Comp-off (${request.type})`,
+                        startDate: new Date(request.date || request.createdAt).toLocaleDateString(),
+                        endDate: new Date(request.date || request.createdAt).toLocaleDateString(),
+                        days: request.amount || request.transferAmount || '1',
+                        hasDocuments: request.documentUrl
+                      };
+                    } else {
+                      const leaveType = (leaveTypes as any[]).find(type => type.id === request.leaveTypeId);
+                      displayInfo = {
+                        type: leaveType?.name || 'Unknown Leave Type',
+                        startDate: new Date(request.startDate).toLocaleDateString(),
+                        endDate: new Date(request.endDate).toLocaleDateString(),
+                        days: request.workingDays || request.totalDays || '1',
+                        hasDocuments: request.documents && request.documents.length > 0
+                      };
+                    }
+                    
+                    const blackoutCheck = activeRequestTab === "Leaves" ? checkBlackoutPeriodConflict(
+                      request.userId,
+                      request.startDate,
+                      request.endDate
+                    ) : { hasConflict: false };
+                    
+                    const isPending = request.status === 'pending' || request.status === 'withdrawal_pending';
+                    const isSelected = selectedRequests.has(request.id);
+                    
+                    return (
+                      <Card key={request.id} className={`transition-all hover:shadow-lg ${
+                        isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                      } ${
+                        blackoutCheck.hasConflict ? 'border-red-200' : ''
+                      }`}>
+                        <CardContent className="p-6">
+                          {/* Header with selection and status */}
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center space-x-3">
+                              {isPending && (
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={(checked) => handleSelectRequest(request.id, checked as boolean)}
+                                />
+                              )}
+                              <div>
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <User className="w-4 h-4 text-gray-400" />
+                                  <span className="font-semibold text-gray-900">{getEmployeeName(request.userId)}</span>
+                                </div>
+                                <div className="flex items-center space-x-2">
+                                  <span className="text-sm text-gray-600">{displayInfo.type}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end space-y-2">
+                              <Badge 
+                                variant={
+                                  request.status === 'pending' ? 'secondary' :
+                                  request.status === 'withdrawal_pending' ? 'secondary' :
+                                  request.status === 'approved' ? 'default' : 'destructive'
+                                }
+                                className={
+                                  request.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                                  request.status === 'withdrawal_pending' ? 'bg-purple-100 text-purple-800 border-purple-200' :
+                                  request.status === 'approved' ? 'bg-green-100 text-green-800 border-green-200' :
+                                  'bg-red-100 text-red-800 border-red-200'
+                                }
+                              >
+                                {request.status === 'withdrawal_pending' ? 'Withdrawal Pending' : 
+                                 request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                              </Badge>
+                              {blackoutCheck.hasConflict && (
+                                <div className="flex items-center space-x-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+                                  <AlertCircle className="w-3 h-3" />
+                                  <span>Blackout Period</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Details Grid */}
+                          <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div>
+                              <div className="flex items-center space-x-1 text-sm text-gray-600 mb-1">
+                                <Calendar className="w-4 h-4" />
+                                <span>Period</span>
+                              </div>
+                              <p className="font-medium text-sm">
+                                {displayInfo.startDate === displayInfo.endDate ? displayInfo.startDate : `${displayInfo.startDate} - ${displayInfo.endDate}`}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">Duration</p>
+                              <p className="font-medium text-sm">
+                                {displayInfo.days} {activeRequestTab === "BTO" && request.timeType === 'hours' ? '' : 'days'}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">Applied</p>
+                              <p className="font-medium text-sm">
+                                {new Date(request.createdAt || request.startDate || request.requestDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-600 mb-1">Documents</p>
+                              {displayInfo.hasDocuments ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewDocuments(activeRequestTab === "Leaves" ? request.documents : [request.documentUrl])}
+                                  className="text-blue-600 hover:text-blue-700 h-auto p-1"
+                                >
+                                  <FileText className="w-4 h-4 mr-1" />
+                                  <span className="text-sm">View</span>
+                                </Button>
+                              ) : (
+                                <span className="text-gray-400 text-sm">None</span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Blackout Period Warning */}
+                          {blackoutCheck.hasConflict && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                              <div className="flex items-center space-x-2">
+                                <AlertCircle className="w-4 h-4 text-red-600" />
+                                <span className="text-sm font-medium text-red-800">Blackout Period Conflict</span>
+                              </div>
+                              <p className="text-xs text-red-600 mt-1">{blackoutCheck.periodName}</p>
+                            </div>
+                          )}
+                          
+                          {/* Actions */}
+                          {isPending ? (
+                            <div className="flex space-x-3">
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprove(request.id)}
+                                disabled={approveRequestMutation.isPending}
+                                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                <Check className="w-4 h-4 mr-2" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReject(request.id)}
+                                disabled={rejectRequestMutation.isPending}
+                                className="flex-1 text-red-600 border-red-200 hover:bg-red-50"
+                              >
+                                <X className="w-4 h-4 mr-2" />
+                                Reject
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="text-center py-2 text-sm text-gray-500 border-t pt-4">
+                              {request.status === 'approved' ? '✓ Request Approved' : '✗ Request Rejected'}
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </>
             ) : (
               <>
+                {/* Table View */}
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Leave Type</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Date Applied</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Leave Period</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Days</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Documents</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Blackout Period</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-500 uppercase tracking-wider w-32">Actions</th>
+                  <table className="min-w-full table-auto border-collapse">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        {selectedApprovalTab === 'Pending' && (
+                          <th className="px-4 py-3 text-left">
+                            <Checkbox
+                              checked={getAllFilteredRequests().filter((req: any) => req.status === 'pending' || req.status === 'withdrawal_pending').every((req: any) => selectedRequests.has(req.id))}
+                              onCheckedChange={handleSelectAll}
+                            />
+                          </th>
+                        )}
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">Employee</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">Leave Type</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200 hidden sm:table-cell">Date Applied</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">Leave Period</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200 hidden md:table-cell">Days</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200 hidden lg:table-cell">Documents</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200 hidden lg:table-cell">Blackout Period</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider border-r border-gray-200">Status</th>
+                        <th className="text-left py-3 px-4 text-sm font-medium text-gray-700 uppercase tracking-wider w-32">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {paginatedRequests().map((request: any) => {
-                      // Handle different request types
-                      let displayInfo;
-                      if (activeRequestTab === "BTO") {
-                        displayInfo = {
-                          type: "BTO",
-                          startDate: new Date(request.requestDate).toLocaleDateString(),
-                          endDate: new Date(request.requestDate).toLocaleDateString(),
-                          days: request.timeType === 'half_day' ? '0.5' : request.timeType === 'quarter_day' ? '0.25' : request.totalHours ? `${request.totalHours}h` : '1',
-                          hasDocuments: request.documentUrl
-                        };
-                      } else if (activeRequestTab === "CompOff") {
-                        displayInfo = {
-                          type: `Comp-off (${request.type})`,
-                          startDate: new Date(request.date || request.createdAt).toLocaleDateString(),
-                          endDate: new Date(request.date || request.createdAt).toLocaleDateString(),
-                          days: request.amount || request.transferAmount || '1',
-                          hasDocuments: request.documentUrl
-                        };
-                      } else {
-                        const leaveType = (leaveTypes as any[]).find(type => type.id === request.leaveTypeId);
-                        displayInfo = {
-                          type: leaveType?.name || 'Unknown Leave Type',
-                          startDate: new Date(request.startDate).toLocaleDateString(),
-                          endDate: new Date(request.endDate).toLocaleDateString(),
-                          days: request.workingDays || request.totalDays || '1',
-                          hasDocuments: request.documents && request.documents.length > 0
-                        };
-                      }
-                      
-                      return (
-                        <tr key={request.id} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 font-medium text-gray-900">
-                            {getEmployeeName(request.userId)}
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">
-                            {displayInfo.type}
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">
-                            {new Date(request.createdAt || request.startDate || request.requestDate).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">
-                            {displayInfo.startDate === displayInfo.endDate ? displayInfo.startDate : `${displayInfo.startDate} - ${displayInfo.endDate}`}
-                          </td>
-                          <td className="py-3 px-4 text-gray-700">
-                            {displayInfo.days} {activeRequestTab === "BTO" && request.timeType === 'hours' ? '' : 'days'}
-                          </td>
-                          <td className="py-3 px-4">
-                            {displayInfo.hasDocuments ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleViewDocuments(activeRequestTab === "Leaves" ? request.documents : [request.documentUrl])}
-                                className="text-blue-600 hover:text-blue-700 p-1"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </Button>
-                            ) : (
-                              <span className="text-gray-400 text-sm">No documents</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4">
-                            {(() => {
-                              // Only check blackout conflicts for leave requests, not BTO or CompOff
-                              if (activeRequestTab === "Leaves") {
-                                const blackoutCheck = checkBlackoutPeriodConflict(
-                                  request.userId,
-                                  request.startDate,
-                                  request.endDate
-                                );
-                                
-                                if (blackoutCheck.hasConflict) {
-                                  return (
-                                    <div className="text-sm">
-                                      <span className="text-red-600 font-medium">Yes</span>
-                                      <div className="text-xs text-gray-600 mt-1">
-                                        {blackoutCheck.periodName}
-                                      </div>
-                                    </div>
-                                  );
-                                } else {
-                                  return <span className="text-gray-500 text-sm">No</span>;
-                                }
-                              } else {
-                                return <span className="text-gray-400 text-sm">N/A</span>;
-                              }
-                            })()}
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge 
-                              variant={
-                                request.status === 'pending' ? 'secondary' :
-                                request.status === 'withdrawal_pending' ? 'secondary' :
-                                request.status === 'approved' ? 'default' : 'destructive'
-                              }
-                              className={
-                                request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                request.status === 'withdrawal_pending' ? 'bg-purple-100 text-purple-800' :
-                                request.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                'bg-red-100 text-red-800'
-                              }
-                            >
-                              {request.status === 'withdrawal_pending' ? 'Withdrawal Pending' : 
-                               request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center space-x-1">
-                              {(request.status === 'pending' || request.status === 'withdrawal_pending') && (
-                                <>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleApprove(request.id)}
-                                    disabled={approveRequestMutation.isPending}
-                                    className="text-green-600 border-green-200 hover:bg-green-50 px-2 py-1 h-7 text-xs whitespace-nowrap"
-                                  >
-                                    <Check className="w-3 h-3 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => handleReject(request.id)}
-                                    disabled={rejectRequestMutation.isPending}
-                                    className="text-red-600 border-red-200 hover:bg-red-50 px-2 py-1 h-7 text-xs whitespace-nowrap"
-                                  >
-                                    <X className="w-3 h-3 mr-1" />
-                                    Reject
-                                  </Button>
-                                </>
-                              )}
-                              {request.status !== 'pending' && (
-                                <span className="text-gray-400 text-sm">
-                                  {request.status === 'approved' ? 'Approved' : 'Rejected'}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-                
-                {/* Pagination Controls */}
-                <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
-                  <div className="flex items-center text-sm text-gray-500">
-                    <span>
-                      Showing {startItem} to {endItem} of {totalItems} results
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      disabled={currentPage === 1}
-                      className="flex items-center"
-                    >
-                      <ChevronLeft className="w-4 h-4 mr-1" />
-                      Previous
-                    </Button>
-                    
-                    <div className="flex items-center space-x-1">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum;
-                        if (totalPages <= 5) {
-                          pageNum = i + 1;
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i;
+                        // Handle different request types
+                        let displayInfo;
+                        if (activeRequestTab === "BTO") {
+                          displayInfo = {
+                            type: "BTO",
+                            startDate: new Date(request.requestDate).toLocaleDateString(),
+                            endDate: new Date(request.requestDate).toLocaleDateString(),
+                            days: request.timeType === 'half_day' ? '0.5' : request.timeType === 'quarter_day' ? '0.25' : request.totalHours ? `${request.totalHours}h` : '1',
+                            hasDocuments: request.documentUrl
+                          };
+                        } else if (activeRequestTab === "CompOff") {
+                          displayInfo = {
+                            type: `Comp-off (${request.type})`,
+                            startDate: new Date(request.date || request.createdAt).toLocaleDateString(),
+                            endDate: new Date(request.date || request.createdAt).toLocaleDateString(),
+                            days: request.amount || request.transferAmount || '1',
+                            hasDocuments: request.documentUrl
+                          };
                         } else {
-                          pageNum = currentPage - 2 + i;
+                          const leaveType = (leaveTypes as any[]).find(type => type.id === request.leaveTypeId);
+                          displayInfo = {
+                            type: leaveType?.name || 'Unknown Leave Type',
+                            startDate: new Date(request.startDate).toLocaleDateString(),
+                            endDate: new Date(request.endDate).toLocaleDateString(),
+                            days: request.workingDays || request.totalDays || '1',
+                            hasDocuments: request.documents && request.documents.length > 0
+                          };
                         }
                         
                         return (
-                          <Button
-                            key={pageNum}
-                            variant={pageNum === currentPage ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => setCurrentPage(pageNum)}
-                            className="w-8 h-8 p-0"
-                          >
-                            {pageNum}
-                          </Button>
+                          <tr key={request.id} className={`border-b border-gray-100 hover:bg-gray-50 ${
+                            selectedRequests.has(request.id) ? 'bg-blue-50' : ''
+                          }`}>
+                            {selectedApprovalTab === 'Pending' && (
+                              <td className="py-3 px-4">
+                                {(request.status === 'pending' || request.status === 'withdrawal_pending') && (
+                                  <Checkbox
+                                    checked={selectedRequests.has(request.id)}
+                                    onCheckedChange={(checked) => handleSelectRequest(request.id, checked as boolean)}
+                                  />
+                                )}
+                              </td>
+                            )}
+                            <td className="py-3 px-4 font-medium text-gray-900 border-r border-gray-200">
+                              {getEmployeeName(request.userId)}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 border-r border-gray-200">
+                              {displayInfo.type}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 border-r border-gray-200 hidden sm:table-cell">
+                              {new Date(request.createdAt || request.startDate || request.requestDate).toLocaleDateString()}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 border-r border-gray-200">
+                              {displayInfo.startDate === displayInfo.endDate ? displayInfo.startDate : `${displayInfo.startDate} - ${displayInfo.endDate}`}
+                            </td>
+                            <td className="py-3 px-4 text-gray-700 border-r border-gray-200 hidden md:table-cell">
+                              {displayInfo.days} {activeRequestTab === "BTO" && request.timeType === 'hours' ? '' : 'days'}
+                            </td>
+                            <td className="py-3 px-4 border-r border-gray-200 hidden lg:table-cell">
+                              {displayInfo.hasDocuments ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleViewDocuments(activeRequestTab === "Leaves" ? request.documents : [request.documentUrl])}
+                                  className="text-blue-600 hover:text-blue-700 p-1"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                </Button>
+                              ) : (
+                                <span className="text-gray-400 text-sm">No documents</span>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 border-r border-gray-200 hidden lg:table-cell">
+                              {(() => {
+                                // Only check blackout conflicts for leave requests, not BTO or CompOff
+                                if (activeRequestTab === "Leaves") {
+                                  const blackoutCheck = checkBlackoutPeriodConflict(
+                                    request.userId,
+                                    request.startDate,
+                                    request.endDate
+                                  );
+                                  
+                                  if (blackoutCheck.hasConflict) {
+                                    return (
+                                      <div className="text-sm">
+                                        <div className="flex items-center space-x-1">
+                                          <AlertCircle className="w-4 h-4 text-red-600" />
+                                          <span className="text-red-600 font-medium">Yes</span>
+                                        </div>
+                                        <div className="text-xs text-gray-600 mt-1">
+                                          {blackoutCheck.periodName}
+                                        </div>
+                                      </div>
+                                    );
+                                  } else {
+                                    return <span className="text-gray-500 text-sm">No</span>;
+                                  }
+                                } else {
+                                  return <span className="text-gray-400 text-sm">N/A</span>;
+                                }
+                              })()}
+                            </td>
+                            <td className="py-3 px-4 border-r border-gray-200">
+                              <Badge 
+                                variant={
+                                  request.status === 'pending' ? 'secondary' :
+                                  request.status === 'withdrawal_pending' ? 'secondary' :
+                                  request.status === 'approved' ? 'default' : 'destructive'
+                                }
+                                className={
+                                  request.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  request.status === 'withdrawal_pending' ? 'bg-purple-100 text-purple-800' :
+                                  request.status === 'approved' ? 'bg-green-100 text-green-800' :
+                                  'bg-red-100 text-red-800'
+                                }
+                              >
+                                {request.status === 'withdrawal_pending' ? 'Withdrawal Pending' : 
+                                 request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center space-x-1">
+                                {(request.status === 'pending' || request.status === 'withdrawal_pending') && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleApprove(request.id)}
+                                      disabled={approveRequestMutation.isPending}
+                                      className="text-green-600 border-green-200 hover:bg-green-50 px-2 py-1 h-7 text-xs whitespace-nowrap"
+                                    >
+                                      <Check className="w-3 h-3 mr-1" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleReject(request.id)}
+                                      disabled={rejectRequestMutation.isPending}
+                                      className="text-red-600 border-red-200 hover:bg-red-50 px-2 py-1 h-7 text-xs whitespace-nowrap"
+                                    >
+                                      <X className="w-3 h-3 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                                {request.status !== 'pending' && request.status !== 'withdrawal_pending' && (
+                                  <span className="text-gray-400 text-sm">
+                                    {request.status === 'approved' ? 'Approved' : 'Rejected'}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
                         );
                       })}
+                    </tbody>
+                  </table>
+                
+                  {/* Pagination Controls */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200">
+                    <div className="flex items-center text-sm text-gray-500">
+                      <span>
+                        Showing {startItem} to {endItem} of {totalItems} results
+                      </span>
                     </div>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                      disabled={currentPage === totalPages}
-                      className="flex items-center"
-                    >
-                      Next
-                      <ChevronRight className="w-4 h-4 ml-1" />
-                    </Button>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="flex items-center"
+                      >
+                        <ChevronLeft className="w-4 h-4 mr-1" />
+                        Previous
+                      </Button>
+                      
+                      <div className="flex items-center space-x-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={pageNum === currentPage ? "default" : "outline"}
+                              size="sm"
+                              onClick={() => setCurrentPage(pageNum)}
+                              className="w-8 h-8 p-0"
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="flex items-center"
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
               </>
             )}
           </CardContent>

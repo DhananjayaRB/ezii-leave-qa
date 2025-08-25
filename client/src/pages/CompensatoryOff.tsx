@@ -967,13 +967,13 @@ export default function CompensatoryOff() {
 
   return (
     <Layout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-gray-900">Compensatory off</h1>
-          <div className="flex items-center space-x-3">
+        <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Compensatory off</h1>
+          <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
             <Select value={periodFilter} onValueChange={setPeriodFilter}>
-              <SelectTrigger className="w-24">
+              <SelectTrigger className="w-full sm:w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -983,7 +983,7 @@ export default function CompensatoryOff() {
               </SelectContent>
             </Select>
             <Select value={yearFilter} onValueChange={setYearFilter}>
-              <SelectTrigger className="w-20">
+              <SelectTrigger className="w-full sm:w-20">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1740,7 +1740,7 @@ export default function CompensatoryOff() {
         </div>
 
         {/* Action Cards */}
-        <div className={`grid gap-4 ${availableActions.length === 2 ? 'grid-cols-2' : availableActions.length === 3 ? 'grid-cols-3' : 'grid-cols-4'}`}>
+        <div className={`grid gap-3 sm:gap-4 ${availableActions.length === 2 ? 'grid-cols-2' : availableActions.length === 3 ? 'grid-cols-2 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
           {availableActions.includes('avail') && (
             <Card 
               className="border border-teal-200 bg-teal-50 cursor-pointer hover:bg-teal-100 transition-colors"
@@ -1807,66 +1807,66 @@ export default function CompensatoryOff() {
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.totalCompOffs}</div>
-              <div className="text-sm text-gray-600">Total comp offs</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.totalCompOffs}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Total comp offs</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.banked}</div>
-              <div className="text-sm text-gray-600">Banked</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.banked}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Banked</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.availed}</div>
-              <div className="text-sm text-gray-600">Availed</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.availed}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Availed</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</div>
-              <div className="text-sm text-gray-600">Pending approvals</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.pendingApprovals}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Pending approvals</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-gray-900">{stats.expired}</div>
-              <div className="text-sm text-gray-600">Expired</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-gray-900">{stats.expired}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Expired</div>
             </CardContent>
           </Card>
 
           <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{stats.balance}</div>
-              <div className="text-sm text-orange-700">Balance</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.balance}</div>
+              <div className="text-xs sm:text-sm text-orange-700">Balance</div>
             </CardContent>
           </Card>
 
           <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{stats.carryForward}</div>
-              <div className="text-sm text-orange-700">Carry forward</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.carryForward}</div>
+              <div className="text-xs sm:text-sm text-orange-700">Carry forward</div>
             </CardContent>
           </Card>
 
           <Card className="bg-orange-50 border-orange-200">
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-orange-600">{stats.enCashable}</div>
-              <div className="text-sm text-orange-700">En-cashable</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-lg sm:text-2xl font-bold text-orange-600">{stats.enCashable}</div>
+              <div className="text-xs sm:text-sm text-orange-700">En-cashable</div>
             </CardContent>
           </Card>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center space-x-6 border-b border-gray-200">
+        <div className="flex items-center space-x-3 sm:space-x-6 border-b border-gray-200 overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}

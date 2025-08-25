@@ -1,19 +1,6 @@
-import express from "express";
-import cors from "cors";
-import { neon } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-http";
-import { desc, eq, and, sql, inArray } from "drizzle-orm";
-import * as schema from "../shared/schema.js";
-import jwt from "jsonwebtoken";
-import multer from "multer";
-import XLSX from "xlsx";
-import dotenv from "dotenv";
-
-import type { Express } from "express";
-import { DatabaseStorage } from "./storage.js";
-import { registerRoutes } from "./routes.js";
-
-import { setupAuth, isAuthenticated } from "./replitAuth.js";
+import express, { type Request, Response, NextFunction } from "express";
+import { registerRoutes } from "./routes";
+import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(express.json());
@@ -69,10 +56,12 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Use Azure's PORT environment variable or fallback to 5000
-  const port = process.env.PORT || 5000;
+  // ALWAYS serve the app on port 5000
+  // this serves both the API and the client.
+  // It is the only port that is not firewalled.
+  const port = 5000;
   server.listen({
-    port: Number(port),
+    port,
     host: "0.0.0.0",
     reusePort: true,
   }, () => {

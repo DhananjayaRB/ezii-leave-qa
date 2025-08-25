@@ -71,8 +71,8 @@ import {
   blackoutPeriods,
   type BlackoutPeriod,
   type InsertBlackoutPeriod,
-} from "../shared/schema";
-import { db } from "./db.js";
+} from "@shared/schema";
+import { db } from "./db";
 import { eq, desc, and, or, sql, isNotNull, like, inArray } from "drizzle-orm";
 
 export interface IStorage {
@@ -80,69 +80,69 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUsers(orgId?: number): Promise<User[]>;
   upsertUser(user: UpsertUser): Promise<User>;
-
+  
   // Company operations
   getCompany(orgId?: number): Promise<Company | undefined>;
   createCompany(company: InsertCompany): Promise<Company>;
   updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company>;
-
+  
   // Leave type operations
   getLeaveTypes(orgId?: number): Promise<LeaveType[]>;
   createLeaveType(leaveType: InsertLeaveType): Promise<LeaveType>;
   updateLeaveType(id: number, leaveType: Partial<InsertLeaveType>): Promise<LeaveType>;
   deleteLeaveType(id: number): Promise<void>;
-
+  
   // Role operations
   getRoles(orgId?: number): Promise<Role[]>;
   createRole(role: InsertRole): Promise<Role>;
   updateRole(id: number, role: Partial<InsertRole>): Promise<Role>;
   deleteRole(id: number): Promise<void>;
-
+  
   // User role operations
   getUserRoles(userId: string): Promise<UserRole[]>;
   assignUserRole(userId: string, roleId: number): Promise<UserRole>;
   removeUserRole(userId: string, roleId: number): Promise<void>;
   getUserPermissions(userId: string): Promise<any>;
-
+  
   // Workflow operations
   getWorkflows(orgId?: number): Promise<Workflow[]>;
   getWorkflowsByOrg(orgId: number): Promise<Workflow[]>;
   createWorkflow(workflow: InsertWorkflow): Promise<Workflow>;
   updateWorkflow(id: number, workflow: Partial<InsertWorkflow>): Promise<Workflow>;
   deleteWorkflow(id: number): Promise<void>;
-
+  
   // Comp off configuration
   getCompOffConfig(orgId?: number): Promise<CompOffConfig | undefined>;
   upsertCompOffConfig(config: InsertCompOffConfig): Promise<CompOffConfig>;
-
+  
   // PTO configuration
   getPTOConfig(orgId?: number): Promise<PTOConfig | undefined>;
   upsertPTOConfig(config: InsertPTOConfig): Promise<PTOConfig>;
-
+  
   // Leave request operations
-  getLeaveRequests(userId?: string, orgId?: number, status?: string): Promise<LeaveRequest[]>;
+  getLeaveRequests(userId?: string, orgId?: number): Promise<LeaveRequest[]>;
   createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest>;
   updateLeaveRequest(id: number, request: Partial<InsertLeaveRequest>): Promise<LeaveRequest>;
   deleteLeaveRequest(id: number): Promise<void>;
-
+  
   // Workflow processing operations
   processWorkflowApproval(leaveRequestId: number, approvedBy: string, orgId?: number): Promise<LeaveRequest>;
   rejectWorkflowRequest(leaveRequestId: number, rejectedBy: string, rejectionReason: string, orgId?: number): Promise<LeaveRequest>;
   getWorkflowForLeaveType(leaveTypeId: number, orgId?: number): Promise<Workflow | undefined>;
   initializeWorkflowForRequest(leaveRequestId: number, workflowId: number): Promise<LeaveRequest>;
-
+  
   // Holiday operations
   getHolidays(orgId?: number): Promise<Holiday[]>;
   createHoliday(holiday: InsertHoliday): Promise<Holiday>;
   updateHoliday(id: number, holiday: Partial<InsertHoliday>): Promise<Holiday>;
   deleteHoliday(id: number): Promise<void>;
-
+  
   // Leave variant operations
   getLeaveVariants(orgId?: number): Promise<LeaveVariant[]>;
   createLeaveVariant(variant: InsertLeaveVariant): Promise<LeaveVariant>;
   updateLeaveVariant(id: number, variant: Partial<InsertLeaveVariant>): Promise<LeaveVariant>;
   deleteLeaveVariant(id: number): Promise<void>;
-
+  
   // Comp off variant operations
   getCompOffVariants(orgId?: number): Promise<CompOffVariant[]>;
   createCompOffVariant(variant: InsertCompOffVariant): Promise<CompOffVariant>;
@@ -160,7 +160,7 @@ export interface IStorage {
   createPTORequest(request: InsertPTORequest): Promise<PTORequest>;
   updatePTORequest(id: number, request: Partial<InsertPTORequest>): Promise<PTORequest>;
   deletePTORequest(id: number): Promise<void>;
-
+  
   // PTO workflow processing operations
   processPTOWorkflowApproval(ptoRequestId: number, approvedBy: string, orgId?: number): Promise<PTORequest>;
   rejectPTOWorkflowRequest(ptoRequestId: number, rejectedBy: string, rejectionReason: string, orgId?: number): Promise<PTORequest>;
@@ -171,21 +171,21 @@ export interface IStorage {
   createCompOffRequest(request: InsertCompOffRequest): Promise<CompOffRequest>;
   updateCompOffRequest(id: number, request: Partial<InsertCompOffRequest>): Promise<CompOffRequest>;
   deleteCompOffRequest(id: number): Promise<void>;
-
+  
   // Comp-off workflow processing operations
   processCompOffWorkflowApproval(compOffRequestId: number, approvedBy: string, orgId?: number): Promise<CompOffRequest>;
   rejectCompOffWorkflowRequest(compOffRequestId: number, rejectedBy: string, rejectionReason: string, orgId?: number): Promise<CompOffRequest>;
   approveCompOffRequest(id: number, approvedBy: string): Promise<CompOffRequest>;
   rejectCompOffRequest(id: number, rejectionReason: string, rejectedBy: string): Promise<CompOffRequest>;
-
+  
   // Comp off transfer operations
   getCompOffTransfers(userId?: string, orgId?: number): Promise<CompOffTransfer[]>;
   createCompOffTransfer(transfer: InsertCompOffTransfer): Promise<CompOffTransfer>;
-
+  
   // Comp off en-cash operations
   getCompOffEnCash(userId?: string, orgId?: number): Promise<CompOffEnCash[]>;
   createCompOffEnCash(enCash: InsertCompOffEnCash): Promise<CompOffEnCash>;
-
+  
   // Employee assignment operations
   getEmployeeAssignments(orgId?: number, leaveVariantId?: number): Promise<EmployeeAssignment[]>;
   getPTOEmployeeAssignments(ptoVariantId: number): Promise<EmployeeAssignment[]>;
@@ -193,7 +193,7 @@ export interface IStorage {
   deleteEmployeeAssignment(id: number): Promise<void>;
   deleteEmployeeAssignments(leaveVariantId: number, assignmentType: string): Promise<void>;
   bulkCreateEmployeeAssignments(assignments: InsertEmployeeAssignment[]): Promise<EmployeeAssignment[]>;
-
+  
   // Employee leave balance operations
   getEmployeeLeaveBalances(userId?: string, year?: number, orgId?: number): Promise<EmployeeLeaveBalance[]>;
   getAllEmployeeLeaveBalances(year?: number, orgId?: number): Promise<EmployeeLeaveBalance[]>;
@@ -202,17 +202,17 @@ export interface IStorage {
   updateEmployeeLeaveBalance(id: number, balance: Partial<InsertEmployeeLeaveBalance>): Promise<EmployeeLeaveBalance>;
   upsertLeaveBalance(balance: InsertEmployeeLeaveBalance): Promise<EmployeeLeaveBalance>;
   createLeaveBalanceTransaction(transaction: InsertLeaveBalanceTransaction): Promise<LeaveBalanceTransaction>;
-  computeInitialLeaveBalances(orgId?: number, externalEmployeeData?: any[]): Promise<void>;
+  computeInitialLeaveBalances(orgId?: number): Promise<void>;
   syncPendingDeductionsForUser(userId: string, orgId: number): Promise<void>;
-
+  
   // Collaborative task operations
   createCollaborativeTask(task: InsertLeaveTaskAssigneeEnhanced): Promise<LeaveTaskAssigneeEnhanced>;
-
+  
   // Data cleanup operations (TEMPORARY)  
   deleteAllLeaveBalanceTransactions(orgId: number): Promise<void>;
   deleteAllLeaveRequests(orgId: number): Promise<void>;
   resetAllEmployeeLeaveBalances(orgId: number): Promise<void>;
-
+  
   // Blackout periods operations
   getBlackoutPeriods(orgId?: number): Promise<BlackoutPeriod[]>;
   createBlackoutPeriod(period: InsertBlackoutPeriod): Promise<BlackoutPeriod>;
@@ -259,7 +259,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
-
+  
   // Company operations
   async getCompany(orgId?: number): Promise<Company | undefined> {
     if (orgId) {
@@ -270,12 +270,12 @@ export class DatabaseStorage implements IStorage {
     const [company] = await db.select().from(companies).limit(1);
     return company;
   }
-
+  
   async createCompany(company: InsertCompany): Promise<Company> {
     const [newCompany] = await db.insert(companies).values(company).returning();
     return newCompany;
   }
-
+  
   async updateCompany(id: number, company: Partial<InsertCompany>): Promise<Company> {
     const [updatedCompany] = await db
       .update(companies)
@@ -284,13 +284,13 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedCompany;
   }
-
+  
   // Leave type operations
   async getLeaveTypes(orgId?: number): Promise<LeaveType[]> {
     try {
       console.log('[LeaveTypes] Detecting available columns and using compatible query');
       console.log(`[LeaveTypes] Fetching leave types for org_id: ${orgId}`);
-
+      
       // First detect available columns
       const columnsResult = await db.execute(sql`
         SELECT column_name 
@@ -298,23 +298,23 @@ export class DatabaseStorage implements IStorage {
         WHERE table_name = 'leave_types' 
         ORDER BY ordinal_position
       `);
-
+      
       const availableColumns = columnsResult.rows.map((row: any) => row.column_name);
       console.log('[LeaveTypes] Available columns:', availableColumns);
-
+      
       // Use only columns that exist in the database
       const baseColumns = ['id', 'name', 'description', 'is_active', 'created_at', 'updated_at'];
       const optionalColumns = ['max_days', 'color', 'icon', 'annual_allowance', 'carry_forward', 'negative_leave_balance', 'org_id'];
-
+      
       const selectColumns = baseColumns.concat(
         optionalColumns.filter(col => availableColumns.includes(col))
       );
-
+      
       console.log('[LeaveTypes] Using columns:', selectColumns);
-
+      
       // Build dynamic query based on available columns
       const columnsList = selectColumns.join(', ');
-
+      
       if (orgId && availableColumns.includes('org_id')) {
         const result = await db.execute(sql.raw(`
           SELECT ${columnsList}
@@ -337,12 +337,12 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-
+  
   async createLeaveType(leaveType: InsertLeaveType): Promise<LeaveType> {
     try {
       console.log('[CreateLeaveType] Starting createLeaveType method');
       console.log('[CreateLeaveType] Input data:', leaveType);
-
+      
       console.log('[CreateLeaveType] About to query information_schema');
       // First get available columns to determine what we can insert
       const columnsResult = await db.execute(sql`
@@ -352,10 +352,10 @@ export class DatabaseStorage implements IStorage {
         ORDER BY ordinal_position
       `);
       console.log('[CreateLeaveType] Successfully queried information_schema');
-
+      
       const availableColumns = columnsResult.rows.map((row: any) => row.column_name);
       console.log('[CreateLeaveType] Available columns:', availableColumns);
-
+      
       // Check if leave type with same name already exists using raw SQL
       const orgId = leaveType.orgId || 60;
       if (availableColumns.includes('org_id')) {
@@ -366,7 +366,7 @@ export class DatabaseStorage implements IStorage {
           AND is_active = true 
           LIMIT 1
         `);
-
+        
         if (existingResult.rows.length > 0) {
           throw new Error(`A leave type with the name "${leaveType.name}" already exists.`);
         }
@@ -377,12 +377,12 @@ export class DatabaseStorage implements IStorage {
           AND is_active = true 
           LIMIT 1
         `);
-
+        
         if (existingResult.rows.length > 0) {
           throw new Error(`A leave type with the name "${leaveType.name}" already exists.`);
         }
       }
-
+      
       // Prepare data for insertion based on available columns
       const insertData: any = {};
       const columnMappings = {
@@ -399,7 +399,7 @@ export class DatabaseStorage implements IStorage {
         created_at: new Date(),
         updated_at: new Date()
       };
-
+      
       // Only include columns that exist in the database
       console.log('[CreateLeaveType] Processing column mappings...');
       Object.entries(columnMappings).forEach(([column, value]) => {
@@ -408,25 +408,25 @@ export class DatabaseStorage implements IStorage {
           insertData[column] = value;
         }
       });
-
+      
       console.log('[CreateLeaveType] Insert data:', insertData);
-
+      
       // Simple test without template strings
       console.log('[CreateLeaveType] About to execute simple raw SQL');
-
+      
       const query = `
         INSERT INTO leave_types (name, description, icon, color, is_active, org_id, created_at, updated_at) 
         VALUES ('${insertData.name}', '${insertData.description}', '${insertData.icon}', '${insertData.color}', ${insertData.is_active}, ${insertData.org_id}, '${insertData.created_at.toISOString()}', '${insertData.updated_at.toISOString()}') 
         RETURNING *
       `;
-
+      
       console.log('[CreateLeaveType] Raw SQL query:', query);
-
+      
       const result = await db.execute(sql.raw(query));
-
+      
       console.log('[CreateLeaveType] Successfully executed INSERT');
       const newLeaveType = result.rows[0] as LeaveType;
-
+      
       console.log('[CreateLeaveType] Created leave type:', newLeaveType);
       return newLeaveType;
     } catch (error) {
@@ -434,7 +434,7 @@ export class DatabaseStorage implements IStorage {
       throw error;
     }
   }
-
+  
   async updateLeaveType(id: number, leaveType: Partial<InsertLeaveType>): Promise<LeaveType> {
     const [updatedLeaveType] = await db
       .update(leaveTypes)
@@ -443,18 +443,18 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedLeaveType;
   }
-
+  
   async deleteLeaveType(id: number): Promise<void> {
     // First delete any related employee assignments
     await db.delete(employeeAssignments).where(eq(employeeAssignments.leaveVariantId, id));
-
+    
     // Then delete any related leave variants
     await db.delete(leaveVariants).where(eq(leaveVariants.leaveTypeId, id));
-
+    
     // Finally delete the leave type itself
     await db.delete(leaveTypes).where(eq(leaveTypes.id, id));
   }
-
+  
   // Role operations
   async getRoles(orgId?: number): Promise<Role[]> {
     if (orgId) {
@@ -462,12 +462,12 @@ export class DatabaseStorage implements IStorage {
     }
     return await db.select().from(roles).where(eq(roles.isActive, true)).orderBy(roles.name);
   }
-
+  
   async createRole(role: InsertRole): Promise<Role> {
     const [newRole] = await db.insert(roles).values(role).returning();
     return newRole;
   }
-
+  
   async updateRole(id: number, role: Partial<InsertRole>): Promise<Role> {
     const [updatedRole] = await db
       .update(roles)
@@ -476,7 +476,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedRole;
   }
-
+  
   async deleteRole(id: number): Promise<void> {
     await db.update(roles).set({ isActive: false }).where(eq(roles.id, id));
   }
@@ -508,7 +508,7 @@ export class DatabaseStorage implements IStorage {
       .from(userRoles)
       .innerJoin(roles, eq(userRoles.roleId, roles.id))
       .where(eq(userRoles.userId, userId));
-
+    
     // Merge all permissions from all roles
     const mergedPermissions = {};
     userRolesList.forEach(role => {
@@ -516,10 +516,10 @@ export class DatabaseStorage implements IStorage {
         Object.assign(mergedPermissions, role.permissions);
       }
     });
-
+    
     return mergedPermissions;
   }
-
+  
   // Workflow operations
   async getWorkflows(orgId?: number): Promise<Workflow[]> {
     if (orgId) {
@@ -533,12 +533,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(workflows.orgId, orgId))
       .orderBy(workflows.createdAt);
   }
-
+  
   async createWorkflow(workflow: InsertWorkflow): Promise<Workflow> {
     const [newWorkflow] = await db.insert(workflows).values(workflow).returning();
     return newWorkflow;
   }
-
+  
   async updateWorkflow(id: number, workflow: Partial<InsertWorkflow>): Promise<Workflow> {
     const [updatedWorkflow] = await db
       .update(workflows)
@@ -547,14 +547,14 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedWorkflow;
   }
-
+  
   async deleteWorkflow(id: number, orgId?: number): Promise<void> {
     const targetOrgId = orgId || 60;
     await db.update(workflows)
       .set({ isActive: false })
       .where(and(eq(workflows.id, id), eq(workflows.orgId, targetOrgId)));
   }
-
+  
   // Comp off configuration
   async getCompOffConfig(orgId?: number): Promise<CompOffConfig | undefined> {
     if (orgId) {
@@ -564,7 +564,7 @@ export class DatabaseStorage implements IStorage {
     const [config] = await db.select().from(compOffConfig).limit(1);
     return config;
   }
-
+  
   async upsertCompOffConfig(config: InsertCompOffConfig): Promise<CompOffConfig> {
     const existing = await this.getCompOffConfig();
     if (existing) {
@@ -579,7 +579,7 @@ export class DatabaseStorage implements IStorage {
       return created;
     }
   }
-
+  
   // PTO configuration
   async getPTOConfig(orgId?: number): Promise<PTOConfig | undefined> {
     if (orgId) {
@@ -589,7 +589,7 @@ export class DatabaseStorage implements IStorage {
     const [config] = await db.select().from(ptoConfig).limit(1);
     return config;
   }
-
+  
   async upsertPTOConfig(config: InsertPTOConfig): Promise<PTOConfig> {
     const existing = config.orgId ? await this.getPTOConfig(config.orgId) : undefined;
     if (existing) {
@@ -604,41 +604,41 @@ export class DatabaseStorage implements IStorage {
       return created;
     }
   }
-
+  
   // Leave request operations
   async getLeaveRequests(userId?: string, orgId?: number, status?: string): Promise<LeaveRequest[]> {
     console.log(`🔍 [Storage] getLeaveRequests called with userId: ${userId}, orgId: ${orgId}, status: ${status}`);
-
+    
     const conditions = [];
     if (userId) conditions.push(eq(leaveRequests.userId, userId));
     if (orgId) conditions.push(eq(leaveRequests.orgId, orgId));
     if (status) conditions.push(eq(leaveRequests.status, status)); // Add status filtering
-
+    
     console.log(`🔍 [Storage] Conditions built: ${conditions.length} conditions`);
     console.log(`🔍 [Storage] Conditions array:`, conditions);
-
+    
     if (conditions.length === 0) {
       console.log(`🔍 [Storage] No conditions provided, returning empty array`);
       return [];
     }
-
+    
     const whereClause = conditions.length === 1 ? conditions[0] : and(...conditions);
     console.log(`🔍 [Storage] Where clause:`, whereClause);
-
+    
     // Get leave requests with proper filtering
     const requests = await db.select().from(leaveRequests).where(whereClause).orderBy(desc(leaveRequests.createdAt));
     console.log(`🔍 [Storage] Query returned ${requests.length} requests`);
     console.log(`🔍 [Storage] First 3 requests:`, requests.slice(0, 3));
-
+    
     // Get all unique leave type IDs
     const leaveTypeIds = [...new Set(requests.map(r => r.leaveTypeId))];
-
+    
     // Get leave type names if we have requests
     if (leaveTypeIds.length === 0) {
       console.log(`🔍 [Storage] No leave type IDs found, returning requests as-is`);
       return requests;
     }
-
+    
     // Try to get leave types, with fallback for schema issues
     let leaveTypesData;
     try {
@@ -649,19 +649,19 @@ export class DatabaseStorage implements IStorage {
       leaveTypesData = [];
     }
     const leaveTypeMap = new Map(leaveTypesData.map(lt => [lt.id, lt.name]));
-
+    
     // Add leave type names to requests
     return requests.map(request => ({
       ...request,
       leaveTypeName: leaveTypeMap.get(request.leaveTypeId) || null
     }));
   }
-
+  
   async createLeaveRequest(request: InsertLeaveRequest): Promise<LeaveRequest> {
     const [newRequest] = await db.insert(leaveRequests).values(request).returning();
     return newRequest;
   }
-
+  
   async updateLeaveRequest(id: number, request: Partial<InsertLeaveRequest>): Promise<LeaveRequest> {
     const [updatedRequest] = await db
       .update(leaveRequests)
@@ -670,7 +670,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedRequest;
   }
-
+  
   async deleteLeaveRequest(id: number): Promise<void> {
     await db.delete(leaveRequests).where(eq(leaveRequests.id, id));
   }
@@ -706,11 +706,11 @@ export class DatabaseStorage implements IStorage {
 
   async processWorkflowApproval(leaveRequestId: number, approvedBy: string, orgId?: number): Promise<LeaveRequest> {
     const targetOrgId = orgId || 60;
-
+    
     // Get the current leave request
     const [request] = await db.select().from(leaveRequests)
       .where(and(eq(leaveRequests.id, leaveRequestId), eq(leaveRequests.orgId, targetOrgId)));
-
+    
     if (!request) {
       throw new Error("Leave request not found");
     }
@@ -718,20 +718,20 @@ export class DatabaseStorage implements IStorage {
     // Get the workflow
     const [workflow] = await db.select().from(workflows)
       .where(eq(workflows.id, request.workflowId!));
-
+    
     if (!workflow) {
       throw new Error("Workflow not found");
     }
 
     const steps = workflow.steps as any[];
     const currentStepIndex = request.currentStep! - 1;
-
+    
     if (currentStepIndex >= steps.length) {
       throw new Error("Invalid workflow step");
     }
 
     const currentStep = steps[currentStepIndex];
-
+    
     // Add approval record to history
     const approvalRecord = {
       stepIndex: currentStepIndex,
@@ -742,10 +742,10 @@ export class DatabaseStorage implements IStorage {
     };
 
     const updatedHistory = [...(request.approvalHistory as any[] || []), approvalRecord];
-
+    
     // Check if this is the last step
     const isLastStep = currentStepIndex === steps.length - 1;
-
+    
     let updateData: any = {
       approvalHistory: updatedHistory,
       updatedAt: new Date()
@@ -760,17 +760,17 @@ export class DatabaseStorage implements IStorage {
         approvedAt: new Date(),
         workflowStatus: "completed"
       };
-
+      
       // Deduct leave balance
       await this.deductLeaveBalance(request.userId, request.leaveTypeId!, request.workingDays, targetOrgId);
     } else {
       // Move to next step - each step requires separate approval
       updateData.currentStep = request.currentStep! + 1;
-
+      
       // Check if next step has auto-approval
       const nextStepIndex = currentStepIndex + 1;
       const nextStep = steps[nextStepIndex];
-
+      
       if (nextStep.autoApproval) {
         // Process auto-approval for next step
         return await this.processAutoApproval(leaveRequestId, nextStepIndex, steps, updatedHistory, targetOrgId);
@@ -782,17 +782,17 @@ export class DatabaseStorage implements IStorage {
       .set(updateData)
       .where(eq(leaveRequests.id, leaveRequestId))
       .returning();
-
+    
     return updatedRequest;
   }
 
   async rejectWorkflowRequest(leaveRequestId: number, rejectedBy: string, rejectionReason: string, orgId?: number): Promise<LeaveRequest> {
     const targetOrgId = orgId || 60;
-
+    
     // Get the current leave request
     const [request] = await db.select().from(leaveRequests)
       .where(and(eq(leaveRequests.id, leaveRequestId), eq(leaveRequests.orgId, targetOrgId)));
-
+    
     if (!request) {
       throw new Error("Leave request not found");
     }
@@ -800,7 +800,7 @@ export class DatabaseStorage implements IStorage {
     // Get the workflow
     const [workflow] = await db.select().from(workflows)
       .where(eq(workflows.id, request.workflowId!));
-
+    
     if (!workflow) {
       throw new Error("Workflow not found");
     }
@@ -808,7 +808,7 @@ export class DatabaseStorage implements IStorage {
     const steps = workflow.steps as any[];
     const currentStepIndex = request.currentStep! - 1;
     const currentStep = steps[currentStepIndex];
-
+    
     // Add rejection record to history
     const rejectionRecord = {
       stepIndex: currentStepIndex,
@@ -820,7 +820,7 @@ export class DatabaseStorage implements IStorage {
     };
 
     const updatedHistory = [...(request.approvalHistory as any[] || []), rejectionRecord];
-
+    
     const [updatedRequest] = await db
       .update(leaveRequests)
       .set({
@@ -832,7 +832,7 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(leaveRequests.id, leaveRequestId))
       .returning();
-
+    
     // CRITICAL: Restore balance for "before workflow" deduction
     // Check if this leave type has "before workflow" deduction setting
     const [leaveVariant] = await db.select().from(leaveVariants)
@@ -840,10 +840,10 @@ export class DatabaseStorage implements IStorage {
         eq(leaveVariants.leaveTypeId, request.leaveTypeId),
         eq(leaveVariants.orgId, targetOrgId)
       ));
-
+    
     if (leaveVariant && leaveVariant.leaveBalanceDeductionBefore) {
       console.log(`Restoring balance for rejected request ${leaveRequestId} - ${request.workingDays} days`);
-
+      
       // Get current balance first
       const [currentBalance] = await db.select().from(employeeLeaveBalances)
         .where(and(
@@ -851,10 +851,10 @@ export class DatabaseStorage implements IStorage {
           eq(employeeLeaveBalances.leaveVariantId, leaveVariant.id),
           eq(employeeLeaveBalances.orgId, targetOrgId)
         ));
-
+      
       if (currentBalance) {
         const newCurrentBalance = parseFloat(currentBalance.currentBalance) + parseFloat(request.workingDays);
-
+        
         // Create balance restoration transaction with balanceAfter
         await db.insert(leaveBalanceTransactions).values({
           userId: request.userId,
@@ -868,7 +868,7 @@ export class DatabaseStorage implements IStorage {
           leaveRequestId: leaveRequestId,
           createdAt: new Date()
         });
-
+        
         // Update the employee leave balance
         await db.update(employeeLeaveBalances)
           .set({
@@ -876,23 +876,23 @@ export class DatabaseStorage implements IStorage {
             updatedAt: new Date()
           })
           .where(eq(employeeLeaveBalances.id, currentBalance.id));
-
+        
         console.log(`Balance restored: ${currentBalance.currentBalance} + ${request.workingDays} = ${newCurrentBalance}`);
       }
     }
-
+    
     return updatedRequest;
   }
 
   private async processAutoApproval(leaveRequestId: number, stepIndex: number, steps: any[], currentHistory: any[], orgId: number): Promise<LeaveRequest> {
     const step = steps[stepIndex];
-
+    
     // Check if this step has time-based auto-approval
     if (step.days > 0 || step.hours > 0) {
       // For time-based auto-approval, schedule it instead of processing immediately
       return await this.scheduleTimeBasedApproval(leaveRequestId, stepIndex, steps, currentHistory, orgId);
     }
-
+    
     // Add auto-approval record for immediate approval
     const autoApprovalRecord = {
       stepIndex,
@@ -903,14 +903,14 @@ export class DatabaseStorage implements IStorage {
     };
 
     const updatedHistory = [...currentHistory, autoApprovalRecord];
-
+    
     // Check if this is the last step
     const isLastStep = stepIndex === steps.length - 1;
-
+    
     if (isLastStep) {
       // Final auto-approval - mark as approved
       const [request] = await db.select().from(leaveRequests).where(eq(leaveRequests.id, leaveRequestId));
-
+      
       const [updatedRequest] = await db
         .update(leaveRequests)
         .set({
@@ -923,16 +923,16 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(leaveRequests.id, leaveRequestId))
         .returning();
-
+      
       // Deduct leave balance
       await this.deductLeaveBalance(request.userId, request.leaveTypeId!, request.workingDays, orgId);
-
+      
       return updatedRequest;
     } else {
-      // Move to next step
+      // Continue to next step
       const nextStepIndex = stepIndex + 1;
       const nextStep = steps[nextStepIndex];
-
+      
       if (nextStep.autoApproval) {
         // Recursively process auto-approvals
         return await this.processAutoApproval(leaveRequestId, nextStepIndex, steps, updatedHistory, orgId);
@@ -947,7 +947,7 @@ export class DatabaseStorage implements IStorage {
           })
           .where(eq(leaveRequests.id, leaveRequestId))
           .returning();
-
+        
         return updatedRequest;
       }
     }
@@ -955,7 +955,7 @@ export class DatabaseStorage implements IStorage {
 
   private async scheduleTimeBasedApproval(leaveRequestId: number, stepIndex: number, steps: any[], currentHistory: any[], orgId: number): Promise<LeaveRequest> {
     const step = steps[stepIndex];
-
+    
     // Calculate auto-approval time
     const autoApprovalDate = new Date();
     if (step.days) {
@@ -964,7 +964,7 @@ export class DatabaseStorage implements IStorage {
     if (step.hours) {
       autoApprovalDate.setHours(autoApprovalDate.getHours() + step.hours);
     }
-
+    
     // Store the scheduled approval time in the request
     const [updatedRequest] = await db
       .update(leaveRequests)
@@ -976,7 +976,7 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(leaveRequests.id, leaveRequestId))
       .returning();
-
+    
     return updatedRequest;
   }
 
@@ -986,7 +986,7 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const errors: string[] = [];
     let processed = 0;
-
+    
     try {
       // Find requests that have scheduled auto-approval time that has passed
       const pendingRequests = await db.select().from(leaveRequests)
@@ -996,20 +996,20 @@ export class DatabaseStorage implements IStorage {
           isNotNull(leaveRequests.scheduledAutoApprovalAt),
           sql`${leaveRequests.scheduledAutoApprovalAt} <= ${now}`
         ));
-
+      
       for (const request of pendingRequests) {
         try {
           // Get the workflow to understand current step
           const [workflow] = await db.select().from(workflows)
             .where(eq(workflows.id, request.workflowId!));
-
+          
           if (workflow) {
             const steps = workflow.steps as any[];
             const currentStepIndex = request.currentStep! - 1;
-
+            
             if (currentStepIndex < steps.length) {
               const currentStep = steps[currentStepIndex];
-
+              
               // Add time-based auto-approval record
               const autoApprovalRecord = {
                 stepIndex: currentStepIndex,
@@ -1020,12 +1020,12 @@ export class DatabaseStorage implements IStorage {
                 scheduledAt: request.scheduledAutoApprovalAt?.toISOString(),
                 processedAt: now.toISOString()
               };
-
+              
               const updatedHistory = [...(request.approvalHistory as any[] || []), autoApprovalRecord];
-
+              
               // Check if this is the last step
               const isLastStep = currentStepIndex === steps.length - 1;
-
+              
               if (isLastStep) {
                 // Final approval
                 await db.update(leaveRequests)
@@ -1039,21 +1039,21 @@ export class DatabaseStorage implements IStorage {
                     updatedAt: now
                   })
                   .where(eq(leaveRequests.id, request.id));
-
+                
                 // Deduct leave balance
                 await this.deductLeaveBalance(request.userId, request.leaveTypeId!, request.workingDays, targetOrgId);
               } else {
                 // Move to next step
                 const nextStepIndex = currentStepIndex + 1;
                 const nextStep = steps[nextStepIndex];
-
+                
                 let updateData: any = {
                   currentStep: nextStepIndex + 1,
                   approvalHistory: updatedHistory,
                   scheduledAutoApprovalAt: null,
                   updatedAt: now
                 };
-
+                
                 // Check if next step also has auto-approval with time
                 if (nextStep.autoApproval && (nextStep.days > 0 || nextStep.hours > 0)) {
                   const nextAutoApprovalDate = new Date();
@@ -1070,12 +1070,12 @@ export class DatabaseStorage implements IStorage {
                   processed++;
                   continue;
                 }
-
+                
                 await db.update(leaveRequests)
                   .set(updateData)
                   .where(eq(leaveRequests.id, request.id));
               }
-
+              
               processed++;
             }
           }
@@ -1086,7 +1086,7 @@ export class DatabaseStorage implements IStorage {
     } catch (error) {
       errors.push(`Error fetching pending requests: ${error}`);
     }
-
+    
     return { processed, errors };
   }
 
@@ -1095,7 +1095,7 @@ export class DatabaseStorage implements IStorage {
     const [leaveVariant] = await db.select().from(leaveVariants)
       .where(and(eq(leaveVariants.leaveTypeId, leaveTypeId), eq(leaveVariants.orgId, orgId)))
       .limit(1);
-
+    
     if (!leaveVariant) {
       console.warn(`No leave variant found for leave type ${leaveTypeId}`);
       return;
@@ -1107,12 +1107,12 @@ export class DatabaseStorage implements IStorage {
       console.error(`Invalid working days value: ${workingDays}`);
       return;
     }
-
+    
     console.log(`[DeductBalance] Processing deduction: userId=${userId}, leaveTypeId=${leaveTypeId}, workingDays=${fullDayAmount}`);
-
+    
     // Get current year
     const currentYear = new Date().getFullYear();
-
+    
     // Update employee leave balance
     const [existingBalance] = await db.select().from(employeeLeaveBalances)
       .where(and(
@@ -1121,25 +1121,25 @@ export class DatabaseStorage implements IStorage {
         eq(employeeLeaveBalances.year, currentYear),
         eq(employeeLeaveBalances.orgId, orgId)
       ));
-
+    
     if (existingBalance) {
       // Convert database numeric values to proper numbers for calculation
       const currentBalance = parseFloat(existingBalance.currentBalance.toString());
       const usedBalance = parseFloat(existingBalance.usedBalance.toString());
-
+      
       console.log(`[DeductBalance] Before conversion: currentBalance type=${typeof existingBalance.currentBalance}, value="${existingBalance.currentBalance}", usedBalance type=${typeof existingBalance.usedBalance}, value="${existingBalance.usedBalance}"`);
       console.log(`[DeductBalance] After conversion: currentBalance=${currentBalance}, usedBalance=${usedBalance}, fullDayAmount=${fullDayAmount}`);
-
+      
       if (isNaN(currentBalance) || isNaN(usedBalance)) {
         console.error(`[DeductBalance] Invalid balance values: currentBalance=${currentBalance}, usedBalance=${usedBalance}`);
         return;
       }
-
+      
       const newBalance = parseFloat((currentBalance - fullDayAmount).toFixed(2));
       const newUsedBalance = parseFloat((usedBalance + fullDayAmount).toFixed(2));
-
+      
       console.log(`[DeductBalance] Balance update: current=${currentBalance} -> new=${newBalance}, used=${usedBalance} -> new=${newUsedBalance}`);
-
+      
       // Use raw SQL to avoid precision issues
       await db.execute(sql`
         UPDATE employee_leave_balances 
@@ -1149,7 +1149,7 @@ export class DatabaseStorage implements IStorage {
           updated_at = NOW()
         WHERE id = ${existingBalance.id}
       `);
-
+      
       // Create transaction record
       await this.createLeaveBalanceTransaction({
         userId,
@@ -1161,7 +1161,7 @@ export class DatabaseStorage implements IStorage {
         year: currentYear,
         orgId
       });
-
+      
       console.log(`[DeductBalance] Successfully updated balance for userId=${userId}, variant=${leaveVariant.id}`);
     } else {
       console.warn(`[DeductBalance] No existing balance found for userId=${userId}, leaveVariantId=${leaveVariant.id}, year=${currentYear}`);
@@ -1223,19 +1223,19 @@ export class DatabaseStorage implements IStorage {
   // Comp off request operations
   async getCompOffRequests(userId?: string, orgId?: number): Promise<CompOffRequest[]> {
     let whereConditions = [];
-
+    
     if (userId) {
       whereConditions.push(eq(compOffRequests.userId, userId));
     }
-
+    
     if (orgId) {
       whereConditions.push(eq(compOffRequests.orgId, orgId));
     }
-
+    
     if (whereConditions.length === 0) {
       return await db.select().from(compOffRequests).orderBy(desc(compOffRequests.createdAt));
     }
-
+    
     return await db.select().from(compOffRequests)
       .where(whereConditions.length === 1 ? whereConditions[0] : and(...whereConditions))
       .orderBy(desc(compOffRequests.createdAt));
@@ -1261,7 +1261,7 @@ export class DatabaseStorage implements IStorage {
         .from(compOffRequests)
         .where(eq(compOffRequests.orgId, orgId))
         .orderBy(compOffRequests.createdAt);
-
+      
       return requests;
     } catch (error) {
       console.error("Error fetching comp off requests by org:", error);
@@ -1306,18 +1306,18 @@ export class DatabaseStorage implements IStorage {
   // Employee assignment operations
   async getEmployeeAssignments(orgId?: number, leaveVariantId?: number): Promise<EmployeeAssignment[]> {
     let whereConditions = [];
-
+    
     if (orgId) {
       whereConditions.push(eq(employeeAssignments.orgId, orgId));
     }
-
+    
     if (leaveVariantId) {
       whereConditions.push(eq(employeeAssignments.leaveVariantId, leaveVariantId));
     }
-
+    
     // Always filter by assignment type for leave variants
     whereConditions.push(eq(employeeAssignments.assignmentType, 'leave_variant'));
-
+    
     return await db
       .select()
       .from(employeeAssignments)
@@ -1340,11 +1340,11 @@ export class DatabaseStorage implements IStorage {
       eq(employeeAssignments.leaveVariantId, variantId),
       eq(employeeAssignments.assignmentType, 'comp_off_variant')
     ];
-
+    
     if (orgId) {
       whereConditions.push(eq(employeeAssignments.orgId, orgId));
     }
-
+    
     const assignments = await db.select().from(employeeAssignments)
       .where(and(...whereConditions));
     return assignments;
@@ -1370,7 +1370,7 @@ export class DatabaseStorage implements IStorage {
 
   async bulkCreateEmployeeAssignments(assignments: InsertEmployeeAssignment[]): Promise<EmployeeAssignment[]> {
     if (assignments.length === 0) return [];
-
+    
     const created = await db
       .insert(employeeAssignments)
       .values(assignments)
@@ -1455,12 +1455,12 @@ export class DatabaseStorage implements IStorage {
 
   async createPTORequest(request: InsertPTORequest): Promise<PTORequest> {
     console.log("Storage - Creating PTO request with data:", request);
-
+    
     const [newRequest] = await db
       .insert(ptoRequests)
       .values(request)
       .returning();
-
+    
     console.log("Storage - Created PTO request:", newRequest);
     return newRequest;
   }
@@ -1468,18 +1468,18 @@ export class DatabaseStorage implements IStorage {
   async getPTORequests(orgId?: number, userId?: string): Promise<PTORequest[]> {
     let query = db.select().from(ptoRequests);
     const conditions = [];
-
+    
     if (orgId) {
       conditions.push(eq(ptoRequests.orgId, orgId));
     }
     if (userId) {
       conditions.push(eq(ptoRequests.userId, userId));
     }
-
+    
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
-
+    
     return await query.orderBy(desc(ptoRequests.createdAt));
   }
 
@@ -1492,13 +1492,13 @@ export class DatabaseStorage implements IStorage {
     if (updates.requestDate && typeof updates.requestDate === 'string') {
       processedUpdates.requestDate = new Date(updates.requestDate);
     }
-
+    
     const [updatedRequest] = await db
       .update(ptoRequests)
       .set(processedUpdates)
       .where(eq(ptoRequests.id, id))
       .returning();
-
+    
     return updatedRequest;
   }
 
@@ -1523,41 +1523,41 @@ export class DatabaseStorage implements IStorage {
   async getEmployeeLeaveBalances(userId?: string, year?: number, orgId?: number): Promise<EmployeeLeaveBalance[]> {
     const currentYear = year || new Date().getFullYear();
     const targetOrgId = orgId || 60;
-
+    
     const baseConditions = [
       eq(employeeLeaveBalances.year, currentYear),
       eq(employeeLeaveBalances.orgId, targetOrgId)
     ];
-
+    
     if (userId) {
       baseConditions.push(eq(employeeLeaveBalances.userId, userId));
     }
-
+    
     const query = db.select().from(employeeLeaveBalances).where(and(...baseConditions));
     let results = await query;
-
+    
     // If no balances found and user ID specified, return empty array to avoid creating incorrect records
     if (userId && results.length === 0) {
       console.log(`[getEmployeeLeaveBalances] No balance records found for user ${userId}, returning empty array`);
       return [];
     }
-
+    
     return results;
   }
 
   async getAllEmployeeLeaveBalances(year?: number, orgId?: number): Promise<EmployeeLeaveBalance[]> {
     try {
       console.log(`[getAllEmployeeLeaveBalances] Called with year: ${year}, orgId: ${orgId}`);
-
+      
       // Skip creation logic since record exists in database but Drizzle isn't finding it
-
+      
       // Use basic query with simplified filtering
       let query = db.select().from(employeeLeaveBalances);
-
+      
       if (orgId) {
         query = query.where(eq(employeeLeaveBalances.orgId, orgId));
       }
-
+      
       if (year && orgId) {
         query = query.where(and(
           eq(employeeLeaveBalances.orgId, orgId),
@@ -1566,13 +1566,13 @@ export class DatabaseStorage implements IStorage {
       } else if (year) {
         query = query.where(eq(employeeLeaveBalances.year, year));
       }
-
+      
       const results = await query;
-
+      
       console.log(`[getAllEmployeeLeaveBalances] Found ${results.length} records before manual fix`);
-
+      
       // Removed phantom user 015 manual fix that was causing incorrect HR report data
-
+      
       console.log(`[getAllEmployeeLeaveBalances] Final result count: ${results.length} records`);
       return results;
     } catch (error) {
@@ -1632,7 +1632,7 @@ export class DatabaseStorage implements IStorage {
   async getAllLeaveBalanceTransactions(userId?: string | null, orgId?: number): Promise<LeaveBalanceTransaction[]> {
     // Build where conditions
     let whereClause;
-
+    
     if (userId && orgId) {
       whereClause = and(
         eq(leaveBalanceTransactions.userId, userId),
@@ -1643,11 +1643,11 @@ export class DatabaseStorage implements IStorage {
     } else if (orgId) {
       whereClause = eq(leaveBalanceTransactions.orgId, orgId);
     }
-
+    
     const transactions = await db.select().from(leaveBalanceTransactions)
       .where(whereClause)
       .orderBy(leaveBalanceTransactions.createdAt);
-
+    
     return transactions;
   }
 
@@ -1659,26 +1659,26 @@ export class DatabaseStorage implements IStorage {
       console.error(`[AutoProRata] External employee data exists: ${!!externalEmployeeData}`);
       console.error(`[AutoProRata] External employee data length: ${externalEmployeeData?.length || 0}`);
       console.error(`[AutoProRata] External employee data:`, JSON.stringify(externalEmployeeData, null, 2));
-
+      
       const currentYear = new Date().getFullYear();
       const currentDate = new Date();
-
+      
       console.error(`[AutoProRata] Starting automatic pro-rata system for org_id: ${orgId}`);
       console.error(`[AutoProRata] Current year: ${currentYear}, Current date: ${currentDate.toISOString()}`);
-
+    
     // Step 1: Get company effective date (leave year start)
     const [company] = await db.select().from(companies).where(eq(companies.orgId, orgId));
     const leaveYearStart = company?.effectiveDate ? new Date(company.effectiveDate) : new Date(currentYear, 0, 1);
-
+    
     console.log(`[AutoProRata] Leave year starts: ${leaveYearStart.toISOString().split('T')[0]}`);
-
+    
     // Step 2: Get all leave variants for this organization
     const allVariants = await db.select()
       .from(leaveVariants)
       .where(eq(leaveVariants.orgId, orgId));
-
+    
     console.log(`[AutoProRata] Found ${allVariants.length} leave variants`);
-
+    
     // Step 3: Get all existing assignments 
     const existingAssignments = await db.select()
       .from(employeeAssignments)
@@ -1688,24 +1688,24 @@ export class DatabaseStorage implements IStorage {
           eq(employeeAssignments.assignmentType, "leave_variant")
         )
       );
-
+    
     console.log(`[AutoProRata] Found ${existingAssignments.length} existing assignments`);
-
+    
     // Step 4: Identify employees who need assignments and pro-rata calculations
     let employeesToProcess = [];
     let createdAssignments = 0;
-
+    
     if (externalEmployeeData && externalEmployeeData.length > 0) {
       // Use external API data if available
       console.log(`[AutoProRata] Using external employee data (${externalEmployeeData.length} employees)`);
-
+      
       for (const extEmployee of externalEmployeeData) {
         const userId = extEmployee.user_id?.toString();
         if (!userId) continue;
-
+        
         // Check if employee joined during current leave year (mid-year joiner)
         let joiningDate = leaveYearStart.toISOString().split('T')[0]; // Default fallback
-
+        
         if (extEmployee.date_of_joining) {
           try {
             const parts = extEmployee.date_of_joining.split('-');
@@ -1723,18 +1723,18 @@ export class DatabaseStorage implements IStorage {
             console.warn(`[AutoProRata] Failed to parse joining date for user ${userId}: ${extEmployee.date_of_joining}`);
           }
         }
-
+        
         const empJoiningDate = new Date(joiningDate);
         const isMidYearJoiner = empJoiningDate > leaveYearStart;
-
+        
         console.log(`[AutoProRata] User ${userId} (${extEmployee.user_name}): joined ${joiningDate}, mid-year: ${isMidYearJoiner}`);
-
+        
         // Create missing assignments for this employee
         for (const variant of allVariants) {
           const hasAssignment = existingAssignments.some(a => 
             a.userId === userId && a.leaveVariantId === variant.id
           );
-
+          
           if (!hasAssignment) {
             try {
               await this.createEmployeeAssignment({
@@ -1750,7 +1750,7 @@ export class DatabaseStorage implements IStorage {
             }
           }
         }
-
+        
         employeesToProcess.push({
           user_id: userId,
           date_of_joining: joiningDate,
@@ -1761,16 +1761,16 @@ export class DatabaseStorage implements IStorage {
     } else {
       // **FALLBACK SYSTEM**: When external API fails, detect mid-year joiners from existing data
       console.log(`[AutoProRata] External API not available, using fallback detection system`);
-
+      
       // Get unique user IDs from existing assignments or balances
       const uniqueUserIds = [...new Set(existingAssignments.map(a => a.userId))];
-
+      
       console.log(`[AutoProRata] Found ${uniqueUserIds.length} employees with assignments`);
-
+      
       // Special case: User 14674 (Jainish Shah) should be treated as mid-year joiner (April 7, 2025)
       if (!uniqueUserIds.includes("14674")) {
         console.log(`[AutoProRata] Adding special case user 14674 (Jainish Shah) as mid-year joiner`);
-
+        
         // Create assignments for user 14674
         for (const variant of allVariants) {
           try {
@@ -1786,11 +1786,11 @@ export class DatabaseStorage implements IStorage {
             console.log(`[AutoProRata] Assignment may already exist: User 14674 → Variant ${variant.id}`);
           }
         }
-
+        
         // Use the actual external employee data if available, otherwise use hardcoded April 7th
         const externalEmp = externalEmployeeData?.find(emp => emp.user_id === "14674");
         const joiningDate = externalEmp?.date_of_joining || "07-Apr-2025";
-
+        
         // Parse joining date to standard format
         let parsedJoiningDate = "2025-04-07"; // Default fallback
         if (joiningDate.includes("-")) {
@@ -1810,17 +1810,17 @@ export class DatabaseStorage implements IStorage {
             console.log(`[AutoProRata] Using fallback date for user 14674: ${error}`);
           }
         }
-
+        
         employeesToProcess.push({
           user_id: "14674",
           date_of_joining: parsedJoiningDate, // Use parsed joining date
           employee_name: externalEmp?.user_name || "Jainish Shah",
           isMidYearJoiner: true
         });
-
+        
         console.log(`[AutoProRata] Added user 14674 with joining date: ${parsedJoiningDate}`);
       }
-
+      
       // Add other existing employees with fallback logic
       for (const userId of uniqueUserIds) {
         employeesToProcess.push({
@@ -1831,14 +1831,14 @@ export class DatabaseStorage implements IStorage {
         });
       }
     }
-
+    
     console.log(`[AutoProRata] Processing ${employeesToProcess.length} employees (${createdAssignments} new assignments created)`);
-
+    
     // Step 5: Run pro-rata calculations with the employee data
     console.log(`[AutoProRata] Employee data being passed to computeInitialLeaveBalances:`, employeesToProcess.map(emp => ({ user_id: emp.user_id, date_of_joining: emp.date_of_joining, employee_name: emp.employee_name })));
     console.log(`[AutoProRata] Original external employee data:`, externalEmployeeData);
     await this.computeInitialLeaveBalances(orgId, externalEmployeeData);
-
+    
     return {
       processedEmployees: employeesToProcess.length,
       createdAssignments,
@@ -1855,7 +1855,7 @@ export class DatabaseStorage implements IStorage {
 
   async createDefaultRoles(orgId: number): Promise<void> {
     console.log(`[Storage] Creating default roles for org_id: ${orgId}`);
-
+    
     // Check if roles already exist for this organization
     const existingRoles = await this.getRoles(orgId);
     if (existingRoles.length > 0) {
@@ -1873,7 +1873,7 @@ export class DatabaseStorage implements IStorage {
           holidays: { view: true, modify: true },
           compensatoryOff: { view: true, modify: true },
           pto: { view: true, modify: true },
-
+          
           // Admin Screens
           adminOverview: { view: true, modify: true },
           approvals: { view: true, modify: true },
@@ -1881,12 +1881,12 @@ export class DatabaseStorage implements IStorage {
           workflows: { view: true, modify: true },
           roles: { view: true, modify: true },
           importLeaveData: { view: true, modify: true },
-
+          
           // Admin Configuration Screens
           adminLeaveTypes: { view: true, modify: true },
           adminCompOff: { view: true, modify: true },
           adminPTO: { view: true, modify: true },
-
+          
           // Allow On Behalf Actions
           allowOnBehalf: { pto: true, leave: true, compOff: true },
         },
@@ -1904,7 +1904,7 @@ export class DatabaseStorage implements IStorage {
           holidays: { view: true, modify: false },
           compensatoryOff: { view: true, modify: false },
           pto: { view: true, modify: false },
-
+          
           // Admin Screens
           adminOverview: { view: true, modify: false },
           approvals: { view: true, modify: true },
@@ -1912,12 +1912,12 @@ export class DatabaseStorage implements IStorage {
           workflows: { view: false, modify: false },
           roles: { view: false, modify: false },
           importLeaveData: { view: false, modify: false },
-
+          
           // Admin Configuration Screens
           adminLeaveTypes: { view: false, modify: false },
           adminCompOff: { view: false, modify: false },
           adminPTO: { view: false, modify: false },
-
+          
           // Allow On Behalf Actions
           allowOnBehalf: { pto: true, leave: true, compOff: true },
         },
@@ -1935,7 +1935,7 @@ export class DatabaseStorage implements IStorage {
           holidays: { view: true, modify: false },
           compensatoryOff: { view: true, modify: true },
           pto: { view: true, modify: true },
-
+          
           // Admin Screens
           adminOverview: { view: false, modify: false },
           approvals: { view: false, modify: false },
@@ -1943,12 +1943,12 @@ export class DatabaseStorage implements IStorage {
           workflows: { view: false, modify: false },
           roles: { view: false, modify: false },
           importLeaveData: { view: false, modify: false },
-
+          
           // Admin Configuration Screens
           adminLeaveTypes: { view: false, modify: false },
           adminCompOff: { view: false, modify: false },
           adminPTO: { view: false, modify: false },
-
+          
           // Allow On Behalf Actions
           allowOnBehalf: { pto: false, leave: false, compOff: false },
         },
@@ -1978,7 +1978,7 @@ export class DatabaseStorage implements IStorage {
     // Get company effective date from database
     const [company] = await db.select().from(companies).where(eq(companies.orgId, orgId));
     const effectiveDate = company?.effectiveDate ? new Date(company.effectiveDate) : new Date(currentYear, 0, 1);
-
+    
     console.log(`Using company effective date as fallback: ${effectiveDate.toISOString().split('T')[0]}`);
 
     // Get all employee assignments to leave variants
@@ -2022,20 +2022,20 @@ export class DatabaseStorage implements IStorage {
 
     // Get unique user IDs from assignments
     const uniqueUserIds = Array.from(new Set(assignments.map(a => a.userId)));
-
+    
     // Create employee data with actual joining dates from external API or fallback to effective date
     console.log(`[ProRata] External employee data received:`, externalEmployeeData?.map(emp => ({ user_id: emp.user_id, date_of_joining: emp.date_of_joining })));
-
+    
     var employees = uniqueUserIds.map(userId => {
       // Find employee data from external API
       const externalEmployee = externalEmployeeData?.find((emp: any) => 
         emp.user_id?.toString() === userId.toString()
       );
-
+      
       console.log(`[ProRata] Looking for user ${userId}, found external employee:`, externalEmployee ? { user_id: externalEmployee.user_id, date_of_joining: externalEmployee.date_of_joining } : "NOT FOUND");
-
+      
       let joiningDate = effectiveDate.toISOString().split('T')[0]; // Default fallback
-
+      
       if (externalEmployee?.date_of_joining) {
         // Parse the date_of_joining from external API (format: "07-Apr-2025")
         try {
@@ -2055,7 +2055,7 @@ export class DatabaseStorage implements IStorage {
           console.warn(`[ProRata] Failed to parse joining date for user ${userId}: ${externalEmployee.date_of_joining}`);
         }
       }
-
+      
       return {
         user_id: userId,
         date_of_joining: joiningDate,
@@ -2069,7 +2069,7 @@ export class DatabaseStorage implements IStorage {
         name: emp.employee_name,
         joining: emp.date_of_joining 
       })));
-
+      
     console.log(`[ProRata] Found ${importedEmployees.length} employee-variant combinations with imported data, excluding from computation`);
 
     let processedCount = 0;
@@ -2086,16 +2086,16 @@ export class DatabaseStorage implements IStorage {
         console.log(`Skipping assignment - employee ${assignment.userId} not found in employee list`);
         continue;
       }
-
+      
       console.log(`[ProRata] User ${assignment.userId}: Using joining date ${employee.date_of_joining} (employee name: ${employee.employee_name})`);
 
       const assignmentKey = `${assignment.userId}-${assignment.leaveVariantId}`;
       console.log(`Checking assignment: ${assignmentKey} for variant ${assignment.variant.leaveVariantName}`);
-
+      
       // Special handling for employees who have imported data - add configured entitlement to imported balance
       if (importedEmployeeKeys.has(assignmentKey)) {
         console.log(`Processing ${assignment.userId} for variant ${assignment.variant.leaveVariantName} - has imported data, will add configured entitlement`);
-
+        
         // Get existing balance that has imported data
         const [existingBalance] = await db.select()
           .from(employeeLeaveBalances)
@@ -2117,15 +2117,15 @@ export class DatabaseStorage implements IStorage {
               currentBalance: typeof existingBalance.currentBalance
             }
           });
-
+          
           // Calculate the configured system entitlement
           const { totalEntitlement: configuredEntitlement, currentBalance: configuredBalance } = this.calculateLeaveEntitlement(
             assignment.variant,
-            effectiveDate, // Use effective date for system calculation, not joining date
+            effectiveDate,
             currentDate,
             currentYear
           );
-
+          
           console.log(`[Debug] CONFIGURED values:`, {
             configuredEntitlement, 
             configuredBalance,
@@ -2134,38 +2134,38 @@ export class DatabaseStorage implements IStorage {
               configuredBalance: typeof configuredBalance
             }
           });
-
+          
           // Add configured entitlement to existing imported balance - convert to numbers first
           const existingTotalEntitlement = parseFloat(existingBalance.totalEntitlement.toString());
           const existingCurrentBalance = parseFloat(existingBalance.currentBalance.toString());
           const newTotalEntitlement = existingTotalEntitlement + configuredEntitlement;
           const newCurrentBalance = existingCurrentBalance + configuredBalance;
-
+          
           console.log(`[Debug] FINAL calculation: ${existingCurrentBalance} + ${configuredBalance} = ${newCurrentBalance} (type: ${typeof newCurrentBalance})`);
-
+          
           // Update the balance with combined values - ensure numbers are properly converted
           await this.updateEmployeeLeaveBalance(existingBalance.id, {
             totalEntitlement: Number(newTotalEntitlement.toFixed(2)),
             currentBalance: Number(newCurrentBalance.toFixed(2)),
             updatedAt: new Date()
           });
-
+          
           // Create transaction for the added configured entitlement
           let transactionDescription = `Added configured system entitlement: ${configuredBalance} days`;
-
+          
           if (assignment.variant.grantLeaves === 'after_earning' && assignment.variant.grantFrequency === 'per_month') {
             const now = new Date();
             const effectiveStart = new Date(effectiveDate);
             const monthsElapsed = (now.getFullYear() - effectiveStart.getFullYear()) * 12 + 
                                  (now.getMonth() - effectiveStart.getMonth());
-
+            
             const isLastDayOfMonth = now.getDate() === new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             const completedMonths = Math.max(0, isLastDayOfMonth ? monthsElapsed : Math.max(0, monthsElapsed - 1));
             const monthlyAccrual = assignment.variant.paidDaysInYear / 12;
-
+            
             transactionDescription = `Added configured entitlement (After Earning): ${completedMonths} months × ${monthlyAccrual} days/month = ${configuredBalance} days earned since ${effectiveStart.toISOString().split('T')[0]}`;
           }
-
+          
           await this.createLeaveBalanceTransaction({
             userId: assignment.userId,
             leaveVariantId: assignment.leaveVariantId,
@@ -2176,7 +2176,7 @@ export class DatabaseStorage implements IStorage {
             year: currentYear,
             orgId
           });
-
+          
           console.log(`Enhanced imported balance for ${assignment.userId}: imported=${existingBalance.currentBalance} + configured=${configuredBalance} = total=${newCurrentBalance}/${newTotalEntitlement} days`);
           processedCount++;
           continue;
@@ -2204,7 +2204,7 @@ export class DatabaseStorage implements IStorage {
 
       if (existingBalance) {
         console.log(`Updating existing balance for ${assignment.userId} - ${variant.leaveVariantName}`);
-
+        
         // Recalculate balance based on actual joining date and "After Earning" logic
         const { totalEntitlement, currentBalance } = this.calculateLeaveEntitlement(
           variant,
@@ -2212,31 +2212,31 @@ export class DatabaseStorage implements IStorage {
           currentDate,
           currentYear
         );
-
+        
         // Update the existing balance
         await this.updateEmployeeLeaveBalance(existingBalance.id, {
           totalEntitlement,
           currentBalance,
           updatedAt: new Date()
         });
-
+        
         // Create updated balance transaction for "After Earning" with proper description
         let updateTransactionDescription = `Updated leave balance for ${currentYear}`;
-
-        if (assignment.variant.grantLeaves === 'after_earning' && assignment.variant.grantFrequency === 'per_month') {
+        
+        if (variant.grantLeaves === 'after_earning' && variant.grantFrequency === 'per_month') {
           const now = new Date();
           const effectiveStart = new Date(effectiveDate);
           const monthsElapsed = (now.getFullYear() - effectiveStart.getFullYear()) * 12 + 
                                (now.getMonth() - effectiveStart.getMonth());
-
+          
           // For pro-rata calculation, only count completed months
           const isLastDayOfMonth = now.getDate() === new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
           const completedMonths = Math.max(0, isLastDayOfMonth ? monthsElapsed : Math.max(0, monthsElapsed - 1));
-          const monthlyAccrual = assignment.variant.paidDaysInYear / 12;
-
+          const monthlyAccrual = variant.paidDaysInYear / 12;
+          
           updateTransactionDescription = `After earning recalculation: ${completedMonths} months × ${monthlyAccrual} days/month = ${currentBalance} days earned since ${effectiveStart.toISOString().split('T')[0]}`;
         }
-
+        
         await this.createLeaveBalanceTransaction({
           userId: assignment.userId,
           leaveVariantId: assignment.leaveVariantId,
@@ -2247,7 +2247,7 @@ export class DatabaseStorage implements IStorage {
           year: currentYear,
           orgId
         });
-
+        
         console.log(`Updated balance for ${assignment.userId}: ${currentBalance}/${totalEntitlement} days`);
         processedCount++;
         continue;
@@ -2277,22 +2277,22 @@ export class DatabaseStorage implements IStorage {
 
       // Create initial grant transaction with appropriate description
       let transactionDescription = `Initial leave grant for ${currentYear}`;
-
+      
       // For "After Earning" leave types, include monthly calculation details in description
       if (assignment.variant.grantLeaves === 'after_earning' && assignment.variant.grantFrequency === 'per_month') {
         const now = new Date();
         const effectiveStart = new Date(effectiveDate);
         const monthsElapsed = (now.getFullYear() - effectiveStart.getFullYear()) * 12 + 
                              (now.getMonth() - effectiveStart.getMonth());
-
+        
         // For pro-rata calculation, only count completed months
         const isLastDayOfMonth = now.getDate() === new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
         const completedMonths = Math.max(0, isLastDayOfMonth ? monthsElapsed : Math.max(0, monthsElapsed - 1));
         const monthlyAccrual = assignment.variant.paidDaysInYear / 12;
-
+        
         transactionDescription = `After earning calculation: ${completedMonths} months × ${monthlyAccrual} days/month = ${currentBalance} days earned since ${effectiveStart.toISOString().split('T')[0]}`;
       }
-
+      
       await this.createLeaveBalanceTransaction({
         userId: assignment.userId,
         leaveVariantId: assignment.leaveVariantId,
@@ -2356,7 +2356,7 @@ export class DatabaseStorage implements IStorage {
     } else {
       // Joined during this year - pro-rata calculation based on actual joining date
       console.log(`[ProRata] ${grantLeaves} calculation: calculating from joining date ${joiningDate.toISOString().split('T')[0]}`);
-
+      
       if (grantLeaves === 'after_earning') {
         // For after_earning, calculate remaining months from joining date
         currentBalance = this.calculateBalanceBasedOnFrequency(
@@ -2433,9 +2433,9 @@ export class DatabaseStorage implements IStorage {
         const startMonth = startDate.getMonth();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth();
-
+        
         console.log(`[InAdvance] Monthly calculation: from ${startDate.toISOString().split('T')[0]} to ${currentDate.toISOString().split('T')[0]}`);
-
+        
         if (currentYear === startYear) {
           // Same year: grant from start month to current month (inclusive)
           const monthsToGrant = Math.max(0, currentMonth - startMonth + 1);
@@ -2455,11 +2455,11 @@ export class DatabaseStorage implements IStorage {
         const startMonth = startDate.getMonth();
         const currentYear = currentDate.getFullYear();
         const currentMonth = currentDate.getMonth();
-
+        
         console.log(`[ProRata] After earning calculation: from ${startDate.toISOString().split('T')[0]} to ${currentDate.toISOString().split('T')[0]}`);
-
+        
         let completedMonths = 0;
-
+        
         if (currentYear === startYear) {
           // FIXED: For "After Earning" same year calculation
           // Only count COMPLETED months, not current month unless it's the last day
@@ -2481,10 +2481,10 @@ export class DatabaseStorage implements IStorage {
           }
           completedMonths = monthsInStartYear + monthsInCurrentYear;
         }
-
+        
         totalGranted = completedMonths * monthlyAmount;
         console.log(`✅ [FIXED] After-earning monthly calculation: ${completedMonths} completed months * ${monthlyAmount} days/month = ${totalGranted} total days`);
-
+        
         // DEBUG: Log specific details for Earned Leave calculations
         if (annualEntitlement === 18) {
           console.log(`🎯 [EARNED LEAVE DEBUG] Date: ${currentDate.toISOString().split('T')[0]}, Day: ${currentDate.getDate()}, LastDay: ${new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}`);
@@ -2521,7 +2521,7 @@ export class DatabaseStorage implements IStorage {
     if (grantLeaves === 'after_earning') {
       // After earning: accrue based on completed months from joining date
       let completedMonths = 0;
-
+      
       if (currentYear === joiningYear) {
         // Same year: count completed months from joining
         const monthsElapsed = Math.max(0, currentMonth - joiningMonth);
@@ -2543,7 +2543,7 @@ export class DatabaseStorage implements IStorage {
     } else {
       // In advance: pro-rata based on remaining months in the year
       let remainingMonths = 12;
-
+      
       if (currentYear === joiningYear) {
         // Calculate remaining months from joining month to end of year
         remainingMonths = 12 - joiningMonth;
@@ -2567,10 +2567,10 @@ export class DatabaseStorage implements IStorage {
     const joiningMonth = joiningDate.getMonth();
     const joiningYear = joiningDate.getFullYear();
     const currentYear = currentDate.getFullYear();
-
+    
     // Use onboarding slabs for joining employees
     const onboardingSlabs = variant.onboardingSlabs || [];
-
+    
     if (!onboardingSlabs || onboardingSlabs.length === 0) {
       // Fallback to month-based pro-rata if no slabs configured
       const remainingMonths = 12 - joiningMonth;
@@ -2589,11 +2589,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     const slabEarning = matchingSlab.earnDays; // Monthly earning from slab (already in full days)
-
+    
     if (grantLeaves === 'after_earning') {
       // For "After Earning" - calculate based on completed months from joining to now
       let completedMonths = 0;
-
+      
       if (currentYear === joiningYear) {
         // Same year: count completed months from joining
         const monthsElapsed = Math.max(0, currentDate.getMonth() - joiningMonth);
@@ -2607,17 +2607,17 @@ export class DatabaseStorage implements IStorage {
         const adjustedCurrentYearMonths = isLastDayOfMonth ? monthsInCurrentYear : Math.max(0, monthsInCurrentYear - 1);
         completedMonths = monthsInJoiningYear + adjustedCurrentYearMonths;
       }
-
+      
       console.log(`[ProRata] After Earning slab calculation: ${completedMonths} completed months × ${slabEarning} days/month = ${completedMonths * slabEarning} days`);
       return completedMonths * slabEarning;
     } else {
       // For "In Advance" - calculate based on remaining months in the year
       let remainingMonths = 12;
-
+      
       if (currentYear === joiningYear) {
         remainingMonths = 12 - joiningMonth;
       }
-
+      
       console.log(`[ProRata] In Advance slab calculation: ${remainingMonths} remaining months × ${slabEarning} days/month = ${remainingMonths * slabEarning} days`);
       return remainingMonths * slabEarning;
     }
@@ -2646,7 +2646,7 @@ export class DatabaseStorage implements IStorage {
 
     // Calculate based on grant frequency - earnDays is already in full day units
     const slabEarning = matchingSlab.earnDays; // Store in full day units
-
+    
     if (grantFrequency === 'per_month') {
       return slabEarning;
     } else if (grantFrequency === 'per_quarter') {
@@ -2660,10 +2660,10 @@ export class DatabaseStorage implements IStorage {
   async fixProRataBalancesForUser(userId: string, orgId: number, joiningDate: string): Promise<any> {
     try {
       console.log(`[FixProRata] Fixing pro-rata balances for user ${userId} with joining date: ${joiningDate}`);
-
+      
       // Parse the joining date
       const actualJoiningDate = new Date(joiningDate);
-
+      
       // Get all leave balances for this user
       const userBalances = await db.select()
         .from(employeeLeaveBalances)
@@ -2671,54 +2671,55 @@ export class DatabaseStorage implements IStorage {
           eq(employeeLeaveBalances.userId, userId),
           eq(employeeLeaveBalances.orgId, orgId)
         ));
-
+      
       console.log(`[FixProRata] Found ${userBalances.length} leave balances for user ${userId}`);
-
+      
       let results = [];
-
+      
       for (const balance of userBalances) {
         // Get the leave variant to understand the accrual settings
         const [variant] = await db.select()
           .from(leaveVariants)
           .where(eq(leaveVariants.id, balance.leaveVariantId));
-
+        
         if (!variant) {
           console.log(`[FixProRata] Variant not found for balance ${balance.id}`);
           continue;
         }
-
+        
         console.log(`[FixProRata] Processing variant: ${variant.leaveTypeName} (${variant.id})`);
-
+        
         // Only fix pro-rata (slab-based) variants
         if (variant.grantFrequency !== 'pro-rata') {
           console.log(`[FixProRata] Skipping ${variant.leaveTypeName} - not pro-rata (${variant.grantFrequency})`);
           continue;
         }
-
+        
         // Calculate what the correct balance should be
         const correctBalance = this.calculateLeaveEntitlement(
-          variant,
-          actualJoiningDate, // Use the actual joining date passed as argument
+          variant.annualAllocation,
+          variant.grantFrequency,
+          actualJoiningDate,
           new Date(), // current date
-          variant.year // Use the year from the balance record
+          variant.onboardingSlabs,
+          variant.effectiveDate ? new Date(variant.effectiveDate) : new Date()
         );
-
+        
         const currentBalanceInDays = parseFloat(balance.currentBalance);
-        const correctBalanceInDays = correctBalance.currentBalance; // Use currentBalance from the returned object
+        const correctBalanceInDays = correctBalance;
         const difference = correctBalanceInDays - currentBalanceInDays;
-
+        
         console.log(`[FixProRata] ${variant.leaveTypeName}: Current=${currentBalanceInDays}, Correct=${correctBalanceInDays}, Difference=${difference}`);
-
+        
         if (Math.abs(difference) > 0.01) { // Only update if there's a meaningful difference
           // Update the balance
           await db.update(employeeLeaveBalances)
             .set({
               currentBalance: correctBalanceInDays.toString(),
-              totalEntitlement: correctBalance.totalEntitlement, // Also update total entitlement if it changed
               updatedAt: new Date()
             })
             .where(eq(employeeLeaveBalances.id, balance.id));
-
+          
           // Create a transaction to record the correction
           await this.createLeaveBalanceTransaction({
             userId,
@@ -2728,24 +2729,22 @@ export class DatabaseStorage implements IStorage {
             description: `Pro-rata balance correction based on actual joining date (${joiningDate})`,
             referenceType: 'balance_correction',
             referenceId: balance.id.toString(),
-            orgId,
-            year: balance.year, // Use the year from the balance record
-            balanceAfter: correctBalanceInDays, // Required field
+            orgId
           });
-
+          
           results.push({
             leaveType: variant.leaveTypeName,
             oldBalance: currentBalanceInDays,
             newBalance: correctBalanceInDays,
             correction: difference
           });
-
+          
           console.log(`[FixProRata] ✅ Updated ${variant.leaveTypeName}: ${currentBalanceInDays} → ${correctBalanceInDays} (${difference > 0 ? '+' : ''}${difference})`);
         } else {
           console.log(`[FixProRata] ✓ ${variant.leaveTypeName} already correct: ${currentBalanceInDays}`);
         }
       }
-
+      
       return {
         userId,
         joiningDate,
@@ -2787,7 +2786,7 @@ export class DatabaseStorage implements IStorage {
             console.log(`[FixProRata] ⚠️ No joining date found for user ${userId}, skipping`);
             continue;
           }
-
+          
           const userResult = await this.fixProRataBalancesForUser(userId, orgId, joiningDate);
           results.push(userResult);
           processedUsers++;
@@ -2818,23 +2817,23 @@ export class DatabaseStorage implements IStorage {
   // PTO workflow processing operations
   async processPTOWorkflowApproval(ptoRequestId: number, approvedBy: string, orgId?: number): Promise<PTORequest> {
     console.log(`Processing PTO workflow approval for request ${ptoRequestId} by ${approvedBy}`);
-
+    
     const requests = await this.getPTORequests(orgId);
     const request = requests.find(r => r.id === ptoRequestId);
-
+    
     if (!request) {
       throw new Error("PTO request not found");
     }
-
+    
     console.log(`Found PTO request for workflow processing:`, request);
 
     const workflows = await this.getWorkflows(orgId);
     const workflow = workflows.find(w => w.id === request.workflowId);
-
+    
     if (!workflow || !workflow.steps) {
       throw new Error("Workflow not found");
     }
-
+    
     console.log(`Found workflow:`, workflow);
 
     // Parse existing approval history
@@ -2877,7 +2876,7 @@ export class DatabaseStorage implements IStorage {
     const request = await this.getPTORequests(orgId).then(requests => 
       requests.find(r => r.id === ptoRequestId)
     );
-
+    
     if (!request) {
       throw new Error("PTO request not found");
     }
@@ -2914,7 +2913,7 @@ export class DatabaseStorage implements IStorage {
     const request = await this.getCompOffRequests(undefined, orgId).then(requests => 
       requests.find(r => r.id === compOffRequestId)
     );
-
+    
     if (!request) {
       throw new Error("Comp-off request not found");
     }
@@ -2922,7 +2921,7 @@ export class DatabaseStorage implements IStorage {
     const workflow = await this.getWorkflows(orgId).then(workflows =>
       workflows.find(w => w.id === request.workflowId)
     );
-
+    
     if (!workflow || !workflow.steps) {
       throw new Error("Workflow not found");
     }
@@ -2970,7 +2969,7 @@ export class DatabaseStorage implements IStorage {
     const request = await this.getCompOffRequests(undefined, orgId).then(requests => 
       requests.find(r => r.id === compOffRequestId)
     );
-
+    
     if (!request) {
       throw new Error("Comp-off request not found");
     }
@@ -3006,7 +3005,7 @@ export class DatabaseStorage implements IStorage {
   // Auto-sync pending deductions based on workflow configuration
   async syncPendingDeductionsForUser(userId: string, orgId: number): Promise<void> {
     console.log(`🔄 [SyncPendingDeductions] Starting for user ${userId}, org ${orgId}`);
-
+    
     try {
       // First, clean up any old pending deductions without request IDs
       console.log(`🧹 [SyncPendingDeductions] Cleaning up old pending deductions for user ${userId}`);
@@ -3016,11 +3015,11 @@ export class DatabaseStorage implements IStorage {
           eq(leaveBalanceTransactions.orgId, orgId),
           eq(leaveBalanceTransactions.transactionType, 'pending_deduction')
         ));
-
+      
       // Get all leave variants for this organization to check workflow configuration
       const leaveVariants = await this.getLeaveVariants(orgId);
       console.log(`📋 [SyncPendingDeductions] Found ${leaveVariants.length} leave variants`);
-
+      
       // Get all pending leave requests for this user
       const pendingRequests = await db.select()
         .from(leaveRequests)
@@ -3029,26 +3028,26 @@ export class DatabaseStorage implements IStorage {
           eq(leaveRequests.orgId, orgId),
           eq(leaveRequests.status, 'pending')
         ));
-
+      
       console.log(`📝 [SyncPendingDeductions] Found ${pendingRequests.length} pending requests`);
-
+      
       for (const request of pendingRequests) {
         // Find the corresponding leave variant - requests have leaveTypeId, need to find matching variant
         let variant = leaveVariants.find(v => v.id === request.leaveVariantId);
-
+        
         // If not found by leaveVariantId, try finding by leaveTypeId (common case)
         if (!variant && request.leaveTypeId) {
           variant = leaveVariants.find(v => v.leaveTypeId === request.leaveTypeId);
           console.log(`🔍 [SyncPendingDeductions] Request ${request.id} - searching by leaveTypeId ${request.leaveTypeId}, found variant:`, variant?.id);
         }
-
+        
         if (!variant) {
           console.log(`⚠️ [SyncPendingDeductions] No variant found for request ${request.id} (leaveVariantId: ${request.leaveVariantId}, leaveTypeId: ${request.leaveTypeId})`);
           continue;
         }
-
+        
         console.log(`🔍 [SyncPendingDeductions] Processing request ${request.id}, variant ${variant.id}, leaveBalanceDeductionBefore: ${variant.leaveBalanceDeductionBefore}`);
-
+        
         // Check current pending_deduction transaction status (check by request ID to handle multiple requests with same amount)
         const existingPendingTransaction = await db.select()
           .from(leaveBalanceTransactions)
@@ -3059,19 +3058,19 @@ export class DatabaseStorage implements IStorage {
             eq(leaveBalanceTransactions.transactionType, 'pending_deduction'),
             like(leaveBalanceTransactions.description, `%Request ${request.id}%`) // Check for request-specific transaction
           ));
-
+        
         // ALL PENDING REQUESTS should have pending_deduction transactions for proper display
         // The difference is only in when the actual deduction happens (before vs after workflow)
         if (existingPendingTransaction.length === 0) {
           const workflowType = variant.leaveBalanceDeductionBefore ? "Before Workflow" : "After Workflow";
           console.log(`➕ [SyncPendingDeductions] Adding pending_deduction for "${workflowType}" - Request ${request.id}`);
-
+          
           // Get current balance to calculate balance_after
           const currentBalances = await this.getEmployeeLeaveBalances(userId, new Date().getFullYear(), orgId);
           const currentBalance = currentBalances.find(b => b.leaveVariantId === variant.id);
           const currentBalanceAmount = currentBalance?.currentBalance || 0;
           const balanceAfter = currentBalanceAmount - request.workingDays;
-
+          
           await this.createLeaveBalanceTransaction({
             userId: userId,
             leaveVariantId: variant.id, // Use the actual variant ID we found
@@ -3088,7 +3087,7 @@ export class DatabaseStorage implements IStorage {
           console.log(`✅ [SyncPendingDeductions] Pending_deduction already exists for "${workflowType}" - Request ${request.id}`);
         }
       }
-
+      
       console.log(`✅ [SyncPendingDeductions] Sync completed for user ${userId}`);
     } catch (error) {
       console.error(`❌ [SyncPendingDeductions] Error syncing for user ${userId}:`, error);
@@ -3099,7 +3098,7 @@ export class DatabaseStorage implements IStorage {
   // Bulk sync pending deductions for all employees with pending requests
   async bulkSyncPendingDeductionsForOrg(orgId: number): Promise<void> {
     console.log(`🔄 [BulkSync] Starting bulk sync for org ${orgId}`);
-
+    
     try {
       // Get all unique user IDs with pending leave requests
       const pendingRequests = await db.select({ userId: leaveRequests.userId })
@@ -3108,16 +3107,16 @@ export class DatabaseStorage implements IStorage {
           eq(leaveRequests.orgId, orgId),
           eq(leaveRequests.status, 'pending')
         ));
-
+      
       // Get unique user IDs
       const uniqueUserIds = [...new Set(pendingRequests.map(req => req.userId))];
       console.log(`🔄 [BulkSync] Found ${uniqueUserIds.length} unique users with pending requests`);
-
+      
       // Process each user
       for (const userId of uniqueUserIds) {
         await this.syncPendingDeductionsForUser(userId, orgId);
       }
-
+      
       console.log(`✅ [BulkSync] Completed bulk sync for org ${orgId}`);
     } catch (error) {
       console.error(`❌ [BulkSync] Error during bulk sync for org ${orgId}:`, error);
@@ -3127,10 +3126,10 @@ export class DatabaseStorage implements IStorage {
   // Collaborative task operations
   async createCollaborativeTask(task: InsertLeaveTaskAssigneeEnhanced): Promise<LeaveTaskAssigneeEnhanced> {
     console.log("🎯 Creating collaborative task:", task);
-
+    
     // Generate a unique link for the task
     const uniqueLink = `task-${task.leaveRequestId}-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-
+    
     const [collaborativeTask] = await db
       .insert(leaveTaskAssigneesEnhanced)
       .values({
@@ -3143,7 +3142,7 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .returning();
-
+    
     console.log("✅ Collaborative task created successfully with ID:", collaborativeTask.id);
     return collaborativeTask;
   }
@@ -3178,21 +3177,21 @@ export class DatabaseStorage implements IStorage {
   // Blackout periods operations
   async getBlackoutPeriods(orgId?: number): Promise<BlackoutPeriod[]> {
     const baseQuery = db.select().from(blackoutPeriods);
-
+    
     if (orgId) {
       return await baseQuery
         .where(eq(blackoutPeriods.orgId, orgId))
         .orderBy(blackoutPeriods.startDate);
     }
-
+    
     return await baseQuery.orderBy(blackoutPeriods.startDate);
   }
-
+  
   async createBlackoutPeriod(period: InsertBlackoutPeriod): Promise<BlackoutPeriod> {
     const [newPeriod] = await db.insert(blackoutPeriods).values(period).returning();
     return newPeriod;
   }
-
+  
   async updateBlackoutPeriod(id: number, period: Partial<InsertBlackoutPeriod>): Promise<BlackoutPeriod> {
     const [updatedPeriod] = await db
       .update(blackoutPeriods)
@@ -3201,7 +3200,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedPeriod;
   }
-
+  
   async deleteBlackoutPeriod(id: number, orgId?: number): Promise<void> {
     if (orgId) {
       await db.delete(blackoutPeriods).where(
